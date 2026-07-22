@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://bgs5mko2vxqie"]
+
+[sub_resource type="GDScript" id="GDScript_yssml"]
+resource_name = "virtual_joystick.gd"
+script/source = "extends Control
+
+@export var knob: Control
+@export var max_distance: float = 60.0  # wie weit der Knob max. rausgezogen werden kann
+@export var dead_zone: float = 15.0     # Mindestbewegung, bevor eine Richtung zählt
+
+var touch_index: int = -1
+var center: Vector2
+var current_direction: Vector2 = Vector2.ZERO
+
+# Welche Richtungen sind gerade \"aktiv\" (für Input.action_press/release)
+var active_actions: Dictionary = {
+	\"left\": false,
+	\"right\": false,
+	\"up\": false,
+	\"down\": false,
+}
+
+
+func _ready() -> void:
+	center = size / 2.0
+	knob.position = center - knob.size / 2.0
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed and touch_index == -1:
+			touch_index = event.index
+			_update_stick(event.position)
+		elif not event.pressed and event.index == touch_index:
+			touch_index = -1
+			_reset_stick()
+
+	elif event is InputEventScreenDrag:
+		if event.index == touch_index:
+			_update_stick(event.position)
+
+
+func _update_stick(touch_pos: Vector2) -> void:
+	var offset := touch_pos - center
+	var distance := offset.length()
+
+	# Knob-Position begrenzen auf max_distance
+	var clamped_offset := offset
+	if distance > max_distance:
+		clamped_offset = offset.normalized() * max_distance
+
+	knob.position = center + clamped_offset - knob.size / 2.0
+
+	# Nur Richtung auswerten, wenn außerhalb der Dead Zone
+	if distance < dead_zone:
+		current_direction = Vector2.ZERO
+	else:
+		current_direction = clamped_offset.normalized()
+
+	_update_actions()
+
+
+func _reset_stick() -> void:
+	current_direction = Vector2.ZERO
+	knob.position = center - knob.size / 2.0
+	_update_actions()
+
+
+func _update_actions() -> void:
+	# Schwellenwert, ab wann eine Achse als \"gedrückt\" gilt (ca. 30° Toleranz)
+	var threshold := 0.35
+
+	var wants_left := current_direction.x < -threshold
+	var wants_right := current_direction.x > threshold
+	var wants_up := current_direction.y < -threshold
+	var wants_down := current_direction.y > threshold
+
+	_set_action(\"left\", wants_left)
+	_set_action(\"right\", wants_right)
+	_set_action(\"up\", wants_up)
+	_set_action(\"down\", wants_down)
+
+
+func _set_action(action_name: String, should_be_pressed: bool) -> void:
+	var is_currently_pressed: bool = active_actions[action_name]
+
+	if should_be_pressed and not is_currently_pressed:
+		Input.action_press(action_name)
+		active_actions[action_name] = true
+	elif not should_be_pressed and is_currently_pressed:
+		Input.action_release(action_name)
+		active_actions[action_name] = false
+"
+
+[node name="VirtualJoystick" type="Control" unique_id=808065778]
+layout_mode = 3
+anchor_right = 0.05
+anchor_bottom = 0.078
+offset_right = -16.0
+offset_bottom = -14.04
+script = SubResource("GDScript_yssml")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=542256663]
+
+[node name="VirtualJoystick" type="VirtualJoystick" parent="CanvasLayer" unique_id=20755478]
+offset_left = 28.0
+offset_top = 121.0
+offset_right = 55.0
+offset_bottom = 147.0
+joystick_mode = 2
+joystick_size = 68.0
+tip_size = 27.0
+action_left = &"left"
+action_right = &"right"
+action_up = &"up"
+action_down = &"down"
+visibility_mode = 1
