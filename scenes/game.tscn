@@ -1,6 +1,6 @@
 [gd_scene format=4 uid="uid://rv7xdjswjgpv"]
 
-[ext_resource type="SpriteFrames" uid="uid://dp457me5e2vm1" path="res://characters/player/player_sprites/tromaggotLittleWhite.pxo" id="2_iywne"]
+[ext_resource type="PackedScene" uid="uid://b4e7tddmr4bs1" path="res://characters/player/tromaggot_small/tromaggot_small.tscn" id="2_iywne"]
 [ext_resource type="Texture2D" uid="uid://dqes1fqiv2cp0" path="res://assets/Tiles.png" id="2_yqjtg"]
 [ext_resource type="PackedScene" uid="uid://bgs5mko2vxqie" path="res://ui/buttons/VirtualJoystick.tscn" id="3_lnu2h"]
 [ext_resource type="Texture2D" uid="uid://ieffb40ptno1" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_closed_64x64.png" id="4_iywne"]
@@ -36,228 +36,6 @@ physics_layer_1/collision_layer = 1
 physics_layer_2/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_lnu2h")
 
-[sub_resource type="GDScript" id="GDScript_uwrxv"]
-resource_name = "little_white_maggot"
-script/source = "extends CharacterBody2D
-
-@export var speed: float = 60.0
-@export var crouch_speed: float = 20.0
-@export var jump_velocity: float = -200.0
-@export var gravity: float = 980.0
-@export var fire_speed_multiplier: float = 1.8
-@export var fire_jump_multiplier: float = 1.4
-@export var jump_windup_frames: int = 8   # wie viele physics_process-Frames der Anlauf dauert
-
-@onready var animated_sprite: AnimatedSprite2D = $WhiteLittleMaggot
-@onready var collision_standing: CollisionShape2D = $CollisionShape2D
-@onready var collision_crouching: CollisionShape2D = $CollisionShape2D_crouch
-
-
-var is_crouching: bool = false
-var was_on_floor: bool = true
-var was_falling_straight: bool = false   # war zuletzt im fall_up-Zustand
-var was_falling_sideways: bool = false
-var is_landing: bool = false             # spielt gerade die Landing-Animation ab
-var landing_variant: String = \"\"     # \"up\" oder \"side\"
-var is_biting: bool = false          # Angriffs-Animation läuft gerade
-var bite_variant: String = \"\"        # welche Bite-Animation läuft (idle/run/jump/...)
-var last_base_state: String = \"\"
-
-var is_jump_starting: bool = false   # Anlauf-Phase läuft gerade
-var jump_windup_timer: int = 0
-var pending_jump_velocity: float = 0.0
-# damit eine kleine animation vor dem Block läuft
-var was_mouth_open: bool = false
-var was_blocking: bool = false        # NEU: war im letzten Frame bereits im Block-Zustand
-var is_block_starting: bool = false   # spielt gerade den Block-Beginn-Frame ab
-
-func _ready() -> void:
-	animated_sprite.animation_finished.connect(_on_animation_finished)
-
-func _physics_process(delta: float) -> void:
-	var mouth_open := Input.is_action_pressed(\"fire\")
-	
-	# Bewegungsrichtung VOR dem Springen-Check ermitteln, da wir sie fürs Biss-Erkennen brauchen
-	var direction := Input.get_axis(\"left\", \"right\")
-		
-	# --- Sprung-Anlauf abarbeiten, falls gerade aktiv ---
-	if is_jump_starting:
-		velocity.y = 0.0  # währenddessen fest am Boden halten
-		jump_windup_timer -= 1
-		if jump_windup_timer <= 0:
-			is_jump_starting = false
-			velocity.y = pending_jump_velocity
-	else:
-		# Schwerkraft anwenden, wenn Spieler nicht am Boden ist
-		if not is_on_floor():
-			velocity.y += gravity * delta
-
-	# Ducken (nur wenn am Boden möglich)
-	is_crouching = Input.is_action_pressed(\"down\") and is_on_floor() and not is_landing and not is_biting
-	
-	# Beißen nur erlauben, wenn NICHT im reinen Block-Zustand (ducken ohne Richtung)
-	var is_blocking := is_crouching and direction == 0.0
-	
-		# Übergang erkennen: Mund öffnet sich neu, während geblockt wird
-	# Übergang erkennen: entweder öffnet sich der Mund neu während geblockt wird,
-	# ODER der Block-Zustand selbst beginnt neu, während der Mund schon offen ist
-	if is_blocking and not was_blocking:
-		if mouth_open:
-			is_block_starting = true
-	elif is_blocking and mouth_open and not was_mouth_open:
-		is_block_starting = true
-
-	# Falls der Block-Zustand komplett verlassen wird, Übergang sofort abbrechen
-	if not is_blocking:
-		is_block_starting = false
-	
-	var is_blocking_locked := is_blocking  # kein Beißen im reinen Block-Zustand
-	# Angriff auslösen: fire wurde gerade losgelassen (nicht während Ducken/Landen)
-	if Input.is_action_just_released(\"fire\") and not is_landing and not is_blocking_locked and not is_jump_starting:
-		is_biting = true
-		bite_variant = _get_movement_state(direction)
-
-	# Springen (nicht während des Duckens erlaubt)
-	# Sprung auslösen: statt sofort velocity.y zu setzen, erst die Anlauf-Phase starten
-	if Input.is_action_just_pressed(\"up\") and is_on_floor() and not is_crouching and not is_landing and not is_biting and not is_jump_starting:
-		var current_jump_velocity := jump_velocity
-		if mouth_open:
-			current_jump_velocity *= fire_jump_multiplier
-		pending_jump_velocity = current_jump_velocity
-		is_jump_starting = true
-		jump_windup_timer = jump_windup_frames
-		velocity.y = 0.0
-	
-	# Nur \"land_up\" (kopfüber) blockiert die Bewegung
-	if is_landing and landing_variant == \"up\":
-		direction = 0.0 # während der senkrechten Landung von oben keine Bewegung zulassen
-		
-	var current_speed := crouch_speed if is_crouching else speed
-	if mouth_open and not is_crouching:
-		current_speed *= fire_speed_multiplier
-	
-	# Während des Anlaufs weiterhin normale horizontale Bewegung erlauben
-	if direction != 0:
-		velocity.x = direction * current_speed
-	else:
-		velocity.x = move_toward(velocity.x, 0, current_speed)
-
-	move_and_slide()
-	_check_landing(direction)
-	update_collision()
-	update_animation(direction, mouth_open)
-	
-	was_on_floor = is_on_floor()
-	was_mouth_open = mouth_open 
-	was_blocking = is_blocking
-
-# Ermittelt den reinen Bewegungszustand (ohne landing/biting), z.B. für die Bite-Auswahl
-func _get_movement_state(direction: float) -> String:
-	if not is_on_floor():
-		if velocity.y < 0:
-			return \"jump\" if direction != 0 else \"jump_up\"
-		else:
-			return \"fall\" if direction != 0 else \"fall_up\"
-	elif is_crouching and direction != 0:
-		return \"crouch_walk\"
-	elif direction != 0:
-		return \"run\"
-	else:
-		return \"idle\"
-
-func _check_landing(direction: float) -> void:
-	# Gerade eben gelandet?
-	if is_on_floor() and not was_on_floor:
-		if was_falling_straight:
-			is_landing = true
-			landing_variant = \"up\"
-		elif was_falling_sideways:
-			is_landing = true
-			landing_variant = \"side\"
-		is_biting = false  # Landung hat Vorrang, falls beides gleichzeitig passiert
-
-	# Merken, ob wir gerade senkrecht (ohne Richtung) fallen
-	if not is_on_floor() and velocity.y >= 0:
-		if direction == 0.0:
-			was_falling_straight = true
-			was_falling_sideways = false
-		else:
-			was_falling_sideways = true
-			was_falling_straight = false
-	elif is_on_floor():
-		was_falling_straight = false
-		was_falling_sideways = false
-
-func _on_animation_finished() -> void:
-	if is_landing:
-		is_landing = false
-		landing_variant = \"\"
-	if is_biting:
-		is_biting = false
-		bite_variant = \"\"
-	if is_block_starting:
-		is_block_starting = false
-
-func update_collision() -> void:
-	collision_standing.disabled = is_crouching
-	collision_crouching.disabled = not is_crouching
-
-	
-func update_animation(direction: float, mouth_open: bool) -> void:
-	if direction != 0:
-		animated_sprite.flip_h = direction < 0
-
-	var base_state: String
-	var is_special_named := false   # true = Animationsname wird direkt verwendet, ohne Mouth-Suffix
-	
-	if is_landing:
-		base_state = \"land_up\" if landing_variant == \"up\" else \"land\"
-	elif is_biting:
-		base_state = \"bite_\" + bite_variant
-		is_special_named = true
-	elif is_block_starting:
-		base_state = \"crouch_mouth_open_down\"
-		is_special_named = true
-	elif is_jump_starting:
-		base_state = \"jump\" if direction != 0 else \"jump_up\"
-	elif not is_on_floor():
-		if velocity.y < 0:
-			base_state = \"jump\" if direction != 0 else \"jump_up\"
-		else:
-			base_state = \"fall\" if direction != 0 else \"fall_up\"
-	elif is_crouching:
-		base_state = \"crouch_walk\" if direction != 0 else \"crouch\"
-	elif direction != 0:
-		base_state = \"run\"
-	else:
-		base_state = \"idle\"
-
-	# bite_* Animationen brauchen kein Mouth-Suffix (zeigen das Schließen selbst)
-	var new_animation: String
-	if is_special_named or base_state.begins_with(\"bite_\"):
-		new_animation = base_state
-	else:
-		var mouth_suffix := \"_mouth_open\" if mouth_open else \"_mouth_closed\"
-		new_animation = base_state + mouth_suffix
-
-	if new_animation != animated_sprite.animation:
-		var current_frame := animated_sprite.frame
-		animated_sprite.play(new_animation)
-
-		if base_state == last_base_state:
-			var frame_count := animated_sprite.sprite_frames.get_frame_count(new_animation)
-			animated_sprite.frame = min(current_frame, frame_count - 1)
-
-	last_base_state = base_state
-	
-"
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_uwrxv"]
-size = Vector2(18.0725, 15.5)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_yqjtg"]
-size = Vector2(31, 6)
-
 [node name="Game" type="Node2D" unique_id=279775185]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=833966935]
@@ -268,25 +46,8 @@ rendering_quadrant_size = 8
 collision_visibility_mode = 2
 physics_quadrant_size = 8
 
-[node name="maggot" type="CharacterBody2D" parent="." unique_id=1855588507]
+[node name="maggot" parent="." unique_id=863516334 instance=ExtResource("2_iywne")]
 position = Vector2(0.145, 0)
-platform_on_leave = 1
-script = SubResource("GDScript_uwrxv")
-
-[node name="WhiteLittleMaggot" type="AnimatedSprite2D" parent="maggot" unique_id=330547106]
-position = Vector2(140.855, 8)
-sprite_frames = ExtResource("2_iywne")
-animation = &"jump_up_mouth_closed"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="maggot" unique_id=701280443]
-visible = false
-position = Vector2(139.85501, 9.75)
-shape = SubResource("RectangleShape2D_uwrxv")
-
-[node name="CollisionShape2D_crouch" type="CollisionShape2D" parent="maggot" unique_id=1607140467]
-visible = false
-position = Vector2(139.355, 15)
-shape = SubResource("RectangleShape2D_yqjtg")
 
 [node name="level" type="TileMapLayer" parent="." unique_id=1824605568]
 position = Vector2(-1, 1)
@@ -296,12 +57,12 @@ rendering_quadrant_size = 8
 collision_visibility_mode = 2
 physics_quadrant_size = 8
 
-[node name="VirtualJoystick" parent="." unique_id=808065778 instance=ExtResource("3_lnu2h")]
+[node name="JoystickControls" parent="." unique_id=808065778 instance=ExtResource("3_lnu2h")]
 script = null
 
-[node name="CanvasLayer2" type="CanvasLayer" parent="VirtualJoystick" unique_id=1566707266]
+[node name="CanvasLayer2" type="CanvasLayer" parent="JoystickControls" unique_id=1566707266]
 
-[node name="VirtualJoystick" type="VirtualJoystick" parent="VirtualJoystick/CanvasLayer2" unique_id=732107471]
+[node name="VirtualJoystick" type="VirtualJoystick" parent="JoystickControls/CanvasLayer2" unique_id=732107471]
 offset_left = 33.0
 offset_top = 157.0
 offset_right = 60.0

@@ -21,7 +21,7 @@ func _on_start_pressed() -> void:
 
 func _on_two_player_pressed() -> void:
 	GameManager.is_two_player_mode = true
-	get_tree().change_scene_to_file(\"res://scenes/game.tscn\")
+	get_tree().change_scene_to_file(\"res://scenes/battle/litte_maggot_fight/little_maggot_fight.tscn\")
 
 
 func _on_quit_pressed() -> void:

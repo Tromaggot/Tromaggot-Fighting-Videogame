@@ -1,0 +1,220 @@
+[gd_scene format=3 uid="uid://c7r3prlcojxkm"]
+
+[ext_resource type="PackedScene" uid="uid://b4e7tddmr4bs1" path="res://characters/player/tromaggot_small/tromaggot_small.tscn" id="1_b3fep"]
+[ext_resource type="SpriteFrames" uid="uid://c5hgls28xb0te" path="res://scenes/battle/litte_maggot_fight/background/little_maggot_fight_background.pxo" id="1_vsjvb"]
+[ext_resource type="SpriteFrames" uid="uid://i387g61ridyn" path="res://scenes/battle/litte_maggot_fight/background/rohrboden.pxo" id="2_0xtja"]
+[ext_resource type="Texture2D" uid="uid://b8tchfqets8iv" path="res://scenes/battle/litte_maggot_fight/background/dark_pipe.png" id="2_488k2"]
+[ext_resource type="Texture2D" uid="uid://ieffb40ptno1" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_closed_64x64.png" id="5_gm0fg"]
+[ext_resource type="Texture2D" uid="uid://bpqngq6uxfe4r" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_open_64x64.png" id="6_tjjtg"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qwwbc"]
+size = Vector2(267, 15)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ktbhh"]
+size = Vector2(256, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6eexj"]
+size = Vector2(18, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_i8rjo"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_6eexj"]
+radius = 20.024984
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_0xtja"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_i8rjo"]
+size = Vector2(23.5, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ktbhh"]
+radius = 15.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_y4mod"]
+radius = 14.142136
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sfuwi"]
+radius = 17.117243
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y4mod"]
+size = Vector2(118, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_jwsq1"]
+radius = 17.029387
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_i8rjo"]
+radius = 23.0
+height = 120.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fk34u"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6eexj"]
+radius = 24.0
+height = 80.0
+
+[sub_resource type="GDScript" id="GDScript_ndxi2"]
+resource_name = "camera_follow"
+script/source = "extends Camera2D
+
+
+@export var target: Node2D
+
+func _process(_delta: float) -> void:
+	if target:
+		global_position.x = target.global_position.x
+"
+
+[node name="LittleMaggotFight" type="Node2D" unique_id=452986831]
+
+[node name="Parallax2D" type="Parallax2D" parent="." unique_id=696356293]
+scroll_scale = Vector2(0.1, 0)
+
+[node name="Background" type="AnimatedSprite2D" parent="Parallax2D" unique_id=156405246]
+position = Vector2(191, 20)
+scale = Vector2(1.1976744, 1.1458334)
+sprite_frames = ExtResource("1_vsjvb")
+animation = &"background_loop"
+autoplay = "background_loop"
+frame = 9
+
+[node name="Parallax2D2" type="Parallax2D" parent="." unique_id=2140333433]
+scroll_scale = Vector2(0.4, 1)
+
+[node name="dark_pipe" type="Sprite2D" parent="Parallax2D2" unique_id=2088411317]
+position = Vector2(198, 129.12502)
+scale = Vector2(1.2577778, 1.2460935)
+texture = ExtResource("2_488k2")
+
+[node name="Ground" type="StaticBody2D" parent="." unique_id=973657961]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Ground" unique_id=1401925270]
+position = Vector2(249, 110.000015)
+scale = Vector2(1, 1.166667)
+sprite_frames = ExtResource("2_0xtja")
+animation = &"floor_idle"
+autoplay = "floor_idle"
+frame = 1
+frame_progress = 0.4761694
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground" unique_id=2083679405]
+visible = false
+position = Vector2(134, 88)
+shape = SubResource("RectangleShape2D_qwwbc")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Ground" unique_id=653711646]
+visible = false
+position = Vector2(385, 87)
+shape = SubResource("RectangleShape2D_ktbhh")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Ground" unique_id=647558585]
+visible = false
+position = Vector2(443, 84)
+shape = SubResource("RectangleShape2D_6eexj")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="Ground" unique_id=1332189103]
+visible = false
+position = Vector2(451, 84)
+shape = SubResource("CircleShape2D_i8rjo")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="Ground" unique_id=1663761014]
+visible = false
+position = Vector2(265, 95)
+shape = SubResource("CircleShape2D_6eexj")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Ground" unique_id=1779215627]
+visible = false
+position = Vector2(434, 84)
+shape = SubResource("CircleShape2D_0xtja")
+
+[node name="CollisionShape2D7" type="CollisionShape2D" parent="Ground" unique_id=1562348794]
+visible = false
+position = Vector2(47.75, 87)
+shape = SubResource("RectangleShape2D_i8rjo")
+
+[node name="CollisionShape2D8" type="CollisionShape2D" parent="Ground" unique_id=2035659716]
+visible = false
+position = Vector2(34, 92)
+shape = SubResource("CircleShape2D_ktbhh")
+
+[node name="CollisionShape2D9" type="CollisionShape2D" parent="Ground" unique_id=1036826420]
+visible = false
+position = Vector2(62, 91)
+shape = SubResource("CircleShape2D_y4mod")
+
+[node name="CollisionShape2D10" type="CollisionShape2D" parent="Ground" unique_id=602017723]
+visible = false
+position = Vector2(98, 93)
+shape = SubResource("CircleShape2D_sfuwi")
+
+[node name="CollisionShape2D11" type="CollisionShape2D" parent="Ground" unique_id=1502920717]
+visible = false
+position = Vector2(206, 85)
+shape = SubResource("RectangleShape2D_y4mod")
+
+[node name="CollisionShape2D12" type="CollisionShape2D" parent="Ground" unique_id=222794168]
+visible = false
+position = Vector2(146, 92)
+shape = SubResource("CircleShape2D_jwsq1")
+
+[node name="CollisionShape2D13" type="CollisionShape2D" parent="Ground" unique_id=1792927457]
+visible = false
+position = Vector2(509, 138)
+shape = SubResource("CapsuleShape2D_i8rjo")
+
+[node name="CollisionShape2D14" type="CollisionShape2D" parent="Ground" unique_id=1740655769]
+visible = false
+position = Vector2(-5, 88)
+shape = SubResource("CircleShape2D_fk34u")
+
+[node name="CollisionShape2D15" type="CollisionShape2D" parent="Ground" unique_id=1311777780]
+visible = false
+position = Vector2(-20, 119)
+shape = SubResource("CapsuleShape2D_6eexj")
+
+[node name="maggot" parent="." unique_id=863516334 instance=ExtResource("1_b3fep")]
+position = Vector2(-71, -84)
+floor_max_angle = 1.0471976
+floor_snap_length = 9.0
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target")]
+position = Vector2(118, -63)
+offset = Vector2(200, 30)
+zoom = Vector2(1.06, 1.06)
+limit_left = -300
+limit_top = -50
+limit_right = 500
+limit_bottom = 150
+limit_smoothed = true
+position_smoothing_enabled = true
+drag_horizontal_offset = -1.0
+drag_vertical_offset = -0.18
+drag_right_margin = 0.06
+drag_bottom_margin = 0.04
+script = SubResource("GDScript_ndxi2")
+target = NodePath("../maggot")
+
+[node name="Control" type="Control" parent="." unique_id=442560925]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Control" unique_id=952391040]
+
+[node name="VirtualJoystick" type="VirtualJoystick" parent="Control/CanvasLayer" unique_id=528437472]
+offset_left = 19.0
+offset_top = 118.0
+offset_right = 59.0
+offset_bottom = 158.0
+action_left = &"left"
+action_right = &"right"
+action_up = &"up"
+action_down = &"down"
+visibility_mode = 1
+
+[node name="TouchControls" type="CanvasLayer" parent="." unique_id=1148896124]
+
+[node name="FireButton" type="TouchScreenButton" parent="TouchControls" unique_id=1735055576]
+position = Vector2(248, 120)
+texture_normal = ExtResource("5_gm0fg")
+texture_pressed = ExtResource("6_tjjtg")
+action = "fire"
