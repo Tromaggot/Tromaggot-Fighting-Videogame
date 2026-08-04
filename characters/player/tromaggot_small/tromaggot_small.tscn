@@ -15,11 +15,26 @@ script/source = "extends CharacterBody2D
 @export var jump_windup_frames: int = 8   # wie viele physics_process-Frames der Anlauf dauert
 @export var floor_rotation_speed: float = 10.0  # wie schnell sich der Sprite an die Neigung anpasst
 
+# for 2 player mode
+@export_group(\"Input Actions\")
+@export var input_left: String = \"left\"
+@export var input_right: String = \"right\"
+@export var input_up: String = \"up\"
+@export var input_down: String = \"down\"
+@export var input_fire: String = \"fire\"
+
+@export_group(\"Death Zone\")
+@export var death_y: float = 1000.0   # Y-Position, ab der ein Charakter als \"gefallen\" gilt
+
+#end 2 player mode
 
 @onready var animated_sprite: AnimatedSprite2D = $WhiteLittleMaggot
 @onready var collision_standing: CollisionShape2D = $CollisionShape2D
 @onready var collision_crouching: CollisionShape2D = $CollisionShape2D_crouch
 
+# for 2 player mode
+signal died(player: CharacterBody2D)
+#end 2 player mode
 
 var is_crouching: bool = false
 var was_on_floor: bool = true
@@ -39,14 +54,21 @@ var was_mouth_open: bool = false
 var was_blocking: bool = false        # NEU: war im letzten Frame bereits im Block-Zustand
 var is_block_starting: bool = false   # spielt gerade den Block-Beginn-Frame ab
 
+# for 2 player mode
+var is_dead: bool = false
+#end 2 player mode
+
 func _ready() -> void:
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 
 func _physics_process(delta: float) -> void:
-	var mouth_open := Input.is_action_pressed(\"fire\")
+	if is_dead:
+		return  # tote Charaktere reagieren nicht mehr auf Input/Physik
+		
+	var mouth_open := Input.is_action_pressed(input_fire)
 	
 	# Bewegungsrichtung VOR dem Springen-Check ermitteln, da wir sie fürs Biss-Erkennen brauchen
-	var direction := Input.get_axis(\"left\", \"right\")
+	var direction := Input.get_axis(input_left, input_right)
 		
 	# --- Sprung-Anlauf abarbeiten, falls gerade aktiv ---
 	if is_jump_starting:
@@ -61,7 +83,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y += gravity * delta
 
 	# Ducken (nur wenn am Boden möglich)
-	is_crouching = Input.is_action_pressed(\"down\") and is_on_floor() and not is_landing and not is_biting
+	is_crouching = Input.is_action_pressed(input_down) and is_on_floor() and not is_landing and not is_biting
 	
 	# Beißen nur erlauben, wenn NICHT im reinen Block-Zustand (ducken ohne Richtung)
 	var is_blocking := is_crouching and direction == 0.0
@@ -81,13 +103,13 @@ func _physics_process(delta: float) -> void:
 	
 	var is_blocking_locked := is_blocking  # kein Beißen im reinen Block-Zustand
 	# Angriff auslösen: fire wurde gerade losgelassen (nicht während Ducken/Landen)
-	if Input.is_action_just_released(\"fire\") and not is_landing and not is_blocking_locked and not is_jump_starting:
+	if Input.is_action_just_released(input_fire) and not is_landing and not is_blocking_locked and not is_jump_starting:
 		is_biting = true
 		bite_variant = _get_movement_state(direction)
 
 	# Springen (nicht während des Duckens erlaubt)
 	# Sprung auslösen: statt sofort velocity.y zu setzen, erst die Anlauf-Phase starten
-	if Input.is_action_just_pressed(\"up\") and is_on_floor() and not is_crouching and not is_landing and not is_biting and not is_jump_starting:
+	if Input.is_action_just_pressed(input_up) and is_on_floor() and not is_crouching and not is_landing and not is_biting and not is_jump_starting:
 		var current_jump_velocity := jump_velocity
 		if mouth_open:
 			current_jump_velocity *= fire_jump_multiplier
@@ -112,6 +134,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_check_landing(direction)
+	_check_death_zone()
 	update_collision()
 	update_animation(direction, mouth_open)
 	_align_sprite_to_floor(delta) 
@@ -120,16 +143,23 @@ func _physics_process(delta: float) -> void:
 	was_mouth_open = mouth_open 
 	was_blocking = is_blocking
 
+func _check_death_zone() -> void:
+	if global_position.y > death_y and not is_dead:
+		_die()
+
+func _die() -> void:
+	is_dead = true
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+	died.emit(self)
 
 func _align_sprite_to_floor(delta: float) -> void:
 	var target_rotation := 0.0
-
 	if is_on_floor():
 		var floor_normal := get_floor_normal()
 		# Die Normale zeigt \"nach oben\" relativ zur Bodenfläche;
 		# der Winkel zur echten Vertikalen (Vector2.UP) ergibt die Neigung
 		target_rotation = -floor_normal.angle_to(Vector2.UP)
-
 	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_rotation, floor_rotation_speed * delta)
 	
 # Ermittelt den reinen Bewegungszustand (ohne landing/biting), z.B. für die Bite-Auswahl
@@ -234,7 +264,7 @@ func update_animation(direction: float, mouth_open: bool) -> void:
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uwrxv"]
-size = Vector2(18.0725, 15.5)
+size = Vector2(23.999998, 8.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yqjtg"]
 size = Vector2(31, 6)
@@ -250,7 +280,7 @@ animation = &"jump_up_mouth_closed"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1183608276]
 visible = false
-position = Vector2(139.85501, 9.75)
+position = Vector2(139, 13.25)
 shape = SubResource("RectangleShape2D_uwrxv")
 
 [node name="CollisionShape2D_crouch" type="CollisionShape2D" parent="." unique_id=1198538209]

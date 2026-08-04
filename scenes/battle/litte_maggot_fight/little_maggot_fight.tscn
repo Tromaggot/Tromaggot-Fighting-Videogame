@@ -174,6 +174,7 @@ shape = SubResource("CapsuleShape2D_6eexj")
 position = Vector2(-71, -84)
 floor_max_angle = 1.0471976
 floor_snap_length = 9.0
+death_y = 300.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target")]
 position = Vector2(118, -63)
@@ -218,3 +219,12 @@ position = Vector2(248, 120)
 texture_normal = ExtResource("5_gm0fg")
 texture_pressed = ExtResource("6_tjjtg")
 action = "fire"
+
+[node name="Player2" parent="." unique_id=1755591560 instance=ExtResource("1_b3fep")]
+position = Vector2(122, -80)
+input_left = "p2_left"
+input_right = "p2_right"
+input_up = "p2_up"
+input_down = "p2_down"
+input_fire = "p2_fire"
+death_y = 300.0
