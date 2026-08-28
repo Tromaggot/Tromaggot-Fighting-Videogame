@@ -14,6 +14,13 @@ script/source = "extends CharacterBody2D
 @export var fire_jump_multiplier: float = 1.4
 @export var jump_windup_frames: int = 8   # wie viele physics_process-Frames der Anlauf dauert
 @export var floor_rotation_speed: float = 10.0  # wie schnell sich der Sprite an die Neigung anpasst
+@export_group(\"Pushing\")
+@export var push_strength: float = 0.4   # Anteil der eigenen Geschwindigkeit, mit der geschoben wird
+
+# wenn die Made auf der anderen Made drauf ist, muss sie geknickt dargestellt werden
+@export_group(\"Edge Bending\")
+@export var body_half_width: float = 16.0    # halbe Breite der EIGENEN Collision Shape, damit ANDERE erkennen können, wo dein Rand ist
+@export var edge_bend_margin: float = 4.0    # wie nah am Rand die Animation einsetzt
 
 # for 2 player mode
 @export_group(\"Input Actions\")
@@ -58,8 +65,14 @@ var is_block_starting: bool = false   # spielt gerade den Block-Beginn-Frame ab
 var is_dead: bool = false
 #end 2 player mode
 
+#für den Zustand, wenn ein Player auf den anderen drauf ist
+var is_edge_bending: bool = false
+var edge_bend_direction: float = 0.0   # -1 = hängt nach links über, 1 = nach rechts
+
+
 func _ready() -> void:
 	animated_sprite.animation_finished.connect(_on_animation_finished)
+	add_to_group(\"players\")
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -133,8 +146,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, current_speed)
 
 	move_and_slide()
+	_handle_player_push(direction, current_speed, delta)   # player getroffen
 	_check_landing(direction)
 	_check_death_zone()
+	_check_edge_bending()   # Player steht auf dem Rand des anderen Players
 	update_collision()
 	update_animation(direction, mouth_open)
 	_align_sprite_to_floor(delta) 
@@ -152,6 +167,25 @@ func _die() -> void:
 	velocity = Vector2.ZERO
 	set_physics_process(false)
 	died.emit(self)
+
+func _handle_player_push(direction: float, current_speed: float, delta: float) -> void:
+	if direction == 0.0 or is_dead:
+		return  # nur pushen, wenn aktiv in eine Richtung gelaufen wird
+
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		var collider := collision.get_collider()
+
+		if collider is CharacterBody2D and collider.is_in_group(\"players\") and collider != self:
+			if \"is_dead\" in collider and collider.is_dead:
+				continue  # tote Spieler nicht mehr schieben
+
+			var push_direction = sign(collider.global_position.x - global_position.x)
+			if push_direction == 0:
+				push_direction = sign(direction)
+
+			var push_amount := current_speed * push_strength * delta
+			collider.global_position.x += push_direction * push_amount
 
 func _align_sprite_to_floor(delta: float) -> void:
 	var target_rotation := 0.0
@@ -213,14 +247,46 @@ func update_collision() -> void:
 	collision_standing.disabled = is_crouching
 	collision_crouching.disabled = not is_crouching
 
+func _check_edge_bending() -> void:
+	is_edge_bending = false
+	edge_bend_direction = 0.0
+
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		var collider := collision.get_collider()
+		var normal := collision.get_normal()
+
+		# Nur \"von oben stehend\" zählt (Normale zeigt überwiegend nach oben)
+		if normal.y > -0.7:
+			continue
+
+		if collider is CharacterBody2D and collider.is_in_group(\"players\") and collider != self:
+			if \"is_dead\" in collider and collider.is_dead:
+				continue
+
+			var other_half_width: float = body_half_width
+			if \"body_half_width\" in collider:
+				other_half_width = collider.body_half_width
+
+			var local_x: float = global_position.x - collider.global_position.x
+			var limit: float = other_half_width - edge_bend_margin
+
+			if local_x > limit:
+				is_edge_bending = true
+				edge_bend_direction = 1.0
+			elif local_x < -limit:
+				is_edge_bending = true
+				edge_bend_direction = -1.0
 	
 func update_animation(direction: float, mouth_open: bool) -> void:
 	if direction != 0:
 		animated_sprite.flip_h = direction < 0
+	elif is_edge_bending:
+		animated_sprite.flip_h = edge_bend_direction < 0
 
 	var base_state: String
-	var is_special_named := false   # true = Animationsname wird direkt verwendet, ohne Mouth-Suffix
-	
+	var is_special_named := false
+
 	if is_landing:
 		base_state = \"land_up\" if landing_variant == \"up\" else \"land\"
 	elif is_biting:
@@ -229,6 +295,8 @@ func update_animation(direction: float, mouth_open: bool) -> void:
 	elif is_block_starting:
 		base_state = \"crouch_mouth_open_down\"
 		is_special_named = true
+	elif is_edge_bending and direction == 0.0:
+		base_state = \"edge_bend\"
 	elif is_jump_starting:
 		base_state = \"jump\" if direction != 0 else \"jump_up\"
 	elif not is_on_floor():
@@ -243,7 +311,6 @@ func update_animation(direction: float, mouth_open: bool) -> void:
 	else:
 		base_state = \"idle\"
 
-	# bite_* Animationen brauchen kein Mouth-Suffix (zeigen das Schließen selbst)
 	var new_animation: String
 	if is_special_named or base_state.begins_with(\"bite_\"):
 		new_animation = base_state
@@ -254,20 +321,22 @@ func update_animation(direction: float, mouth_open: bool) -> void:
 	if new_animation != animated_sprite.animation:
 		var current_frame := animated_sprite.frame
 		animated_sprite.play(new_animation)
-
 		if base_state == last_base_state:
 			var frame_count := animated_sprite.sprite_frames.get_frame_count(new_animation)
 			animated_sprite.frame = min(current_frame, frame_count - 1)
 
 	last_base_state = base_state
+	# Ende Update Animation
 	
 "
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_uwrxv"]
-size = Vector2(23.999998, 8.5)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_j0i20"]
+radius = 3.75
+height = 26.0
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_yqjtg"]
-size = Vector2(31, 6)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p0ndl"]
+radius = 3.0
+height = 25.290009
 
 [node name="maggot" type="CharacterBody2D" unique_id=863516334]
 platform_on_leave = 1
@@ -276,14 +345,16 @@ script = SubResource("GDScript_uwrxv")
 [node name="WhiteLittleMaggot" type="AnimatedSprite2D" parent="." unique_id=1246855360]
 position = Vector2(140.855, 8)
 sprite_frames = ExtResource("1_p0ndl")
-animation = &"jump_up_mouth_closed"
+animation = &"edge_bend_mouth_closed"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1183608276]
 visible = false
-position = Vector2(139, 13.25)
-shape = SubResource("RectangleShape2D_uwrxv")
+position = Vector2(141, 14)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_j0i20")
 
 [node name="CollisionShape2D_crouch" type="CollisionShape2D" parent="." unique_id=1198538209]
 visible = false
-position = Vector2(139.355, 15)
-shape = SubResource("RectangleShape2D_yqjtg")
+position = Vector2(141, 15)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_p0ndl")
