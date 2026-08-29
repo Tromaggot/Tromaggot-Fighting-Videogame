@@ -22,6 +22,11 @@ script/source = "extends CharacterBody2D
 @export var body_half_width: float = 16.0    # halbe Breite der EIGENEN Collision Shape, damit ANDERE erkennen können, wo dein Rand ist
 @export var edge_bend_margin: float = 4.0    # wie nah am Rand die Animation einsetzt
 
+# Schadensaufnahme
+@export_group(\"Combat\")
+@export var hit_range: float = 20.0   # wie nah der Biss sein muss, um zu treffen
+@export var hit_max_vertical_distance: float = 10.0   # max. Höhenunterschied, bei dem ein Biss noch trifft
+
 # for 2 player mode
 @export_group(\"Input Actions\")
 @export var input_left: String = \"left\"
@@ -61,6 +66,9 @@ var was_mouth_open: bool = false
 var was_blocking: bool = false        # NEU: war im letzten Frame bereits im Block-Zustand
 var is_block_starting: bool = false   # spielt gerade den Block-Beginn-Frame ab
 
+#Zustand gerade getroffen
+var is_hit_reacting: bool = false
+
 # for 2 player mode
 var is_dead: bool = false
 #end 2 player mode
@@ -69,6 +77,9 @@ var is_dead: bool = false
 var is_edge_bending: bool = false
 var edge_bend_direction: float = 0.0   # -1 = hängt nach links über, 1 = nach rechts
 
+#weil die Animation manchmal hängt
+var hit_reaction_timer: float = 0.0
+const HIT_REACTION_MAX_DURATION: float = 0.5
 
 func _ready() -> void:
 	animated_sprite.animation_finished.connect(_on_animation_finished)
@@ -77,6 +88,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return  # tote Charaktere reagieren nicht mehr auf Input/Physik
+	
+	if is_hit_reacting:
+		hit_reaction_timer -= delta
+		if hit_reaction_timer <= 0:
+			is_hit_reacting = false
 		
 	var mouth_open := Input.is_action_pressed(input_fire)
 	
@@ -150,6 +166,7 @@ func _physics_process(delta: float) -> void:
 	_check_landing(direction)
 	_check_death_zone()
 	_check_edge_bending()   # Player steht auf dem Rand des anderen Players
+	_check_bite_hit()
 	update_collision()
 	update_animation(direction, mouth_open)
 	_align_sprite_to_floor(delta) 
@@ -242,6 +259,8 @@ func _on_animation_finished() -> void:
 		bite_variant = \"\"
 	if is_block_starting:
 		is_block_starting = false
+	if is_hit_reacting:
+		is_hit_reacting = false
 
 func update_collision() -> void:
 	collision_standing.disabled = is_crouching
@@ -277,7 +296,41 @@ func _check_edge_bending() -> void:
 			elif local_x < -limit:
 				is_edge_bending = true
 				edge_bend_direction = -1.0
-	
+
+func _check_bite_hit() -> void:
+	# Nur im ERSTEN Frame des Bisses prüfen, nicht bei jedem Frame,
+	# sonst würde ein Treffer die ganze Bissdauer über wiederholt ausgelöst
+	if not is_biting or last_base_state != (\"bite_\" + bite_variant):
+		return
+
+	if animated_sprite.frame != 0:
+		return  # nur beim allerersten Frame des Bisses auslösen
+
+	for player in get_tree().get_nodes_in_group(\"players\"):
+		if player == self:
+			continue
+		if \"is_dead\" in player and player.is_dead:
+			continue
+
+		var horizontal_distance: float = abs(player.global_position.x - global_position.x)
+		var vertical_distance: float = abs(player.global_position.y - global_position.y)
+
+		if horizontal_distance <= hit_range and vertical_distance <= hit_max_vertical_distance:
+			var facing_direction: float = -1.0 if animated_sprite.flip_h else 1.0
+			var to_target: float = sign(player.global_position.x - global_position.x)
+			if to_target == 0 or facing_direction == to_target:
+				if player.has_method(\"receive_hit\"):
+					player.receive_hit()
+
+
+func receive_hit() -> void:
+	hit_reaction_timer = HIT_REACTION_MAX_DURATION
+	if is_dead or is_hit_reacting:
+		return
+	is_hit_reacting = true
+	is_biting = false      # ein laufender eigener Biss wird unterbrochen
+	is_block_starting = false
+
 func update_animation(direction: float, mouth_open: bool) -> void:
 	if direction != 0:
 		animated_sprite.flip_h = direction < 0
@@ -287,7 +340,10 @@ func update_animation(direction: float, mouth_open: bool) -> void:
 	var base_state: String
 	var is_special_named := false
 
-	if is_landing:
+	if is_hit_reacting:
+		base_state = \"hit_mouth_open\" if mouth_open else \"hit_mouth_closed\"
+		is_special_named = true
+	elif is_landing:
 		base_state = \"land_up\" if landing_variant == \"up\" else \"land\"
 	elif is_biting:
 		base_state = \"bite_\" + bite_variant
@@ -345,16 +401,14 @@ script = SubResource("GDScript_uwrxv")
 [node name="WhiteLittleMaggot" type="AnimatedSprite2D" parent="." unique_id=1246855360]
 position = Vector2(140.855, 8)
 sprite_frames = ExtResource("1_p0ndl")
-animation = &"edge_bend_mouth_closed"
+animation = &"hit_mouth_closed"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1183608276]
-visible = false
 position = Vector2(141, 14)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_j0i20")
 
 [node name="CollisionShape2D_crouch" type="CollisionShape2D" parent="." unique_id=1198538209]
-visible = false
 position = Vector2(141, 15)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_p0ndl")
