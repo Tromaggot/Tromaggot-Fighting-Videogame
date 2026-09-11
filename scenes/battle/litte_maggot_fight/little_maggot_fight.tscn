@@ -176,7 +176,9 @@ floor_max_angle = 1.0471976
 floor_snap_length = 9.0
 body_half_width = 8.0
 hit_range = 30.0
-hit_max_vertical_distance = 20.0
+hit_max_vertical_distance = 15.0
+knockback_strength = 250.0
+knockback_friction = 4.0
 death_y = 300.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target")]
@@ -227,7 +229,9 @@ action = "fire"
 position = Vector2(122, -80)
 body_half_width = 8.0
 hit_range = 30.0
-hit_max_vertical_distance = 20.0
+hit_max_vertical_distance = 15.0
+knockback_strength = 250.0
+knockback_friction = 4.0
 input_left = "p2_left"
 input_right = "p2_right"
 input_up = "p2_up"
