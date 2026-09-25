@@ -171,7 +171,7 @@ position = Vector2(-20, 119)
 shape = SubResource("CapsuleShape2D_6eexj")
 
 [node name="maggot" parent="." unique_id=863516334 instance=ExtResource("1_b3fep")]
-position = Vector2(-71, -84)
+position = Vector2(51, -81)
 floor_max_angle = 1.0471976
 floor_snap_length = 9.0
 body_half_width = 8.0
@@ -183,12 +183,12 @@ death_y = 300.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target")]
 position = Vector2(118, -63)
-offset = Vector2(200, 30)
+offset = Vector2(110, 15)
 zoom = Vector2(1.06, 1.06)
-limit_left = -300
-limit_top = -50
-limit_right = 500
-limit_bottom = 150
+limit_left = -219
+limit_top = -37
+limit_right = 581
+limit_bottom = 160
 limit_smoothed = true
 position_smoothing_enabled = true
 drag_horizontal_offset = -1.0
@@ -226,7 +226,7 @@ texture_pressed = ExtResource("6_tjjtg")
 action = "fire"
 
 [node name="Player2" parent="." unique_id=1755591560 instance=ExtResource("1_b3fep")]
-position = Vector2(122, -80)
+position = Vector2(201, -80)
 body_half_width = 8.0
 hit_range = 30.0
 hit_max_vertical_distance = 15.0

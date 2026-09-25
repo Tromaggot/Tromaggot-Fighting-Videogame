@@ -1,0 +1,31 @@
+[remap]
+
+importer="Pixelorama SpriteFrames"
+type="SpriteFrames"
+uid="uid://1rrrc0wwcbun"
+path="res://.godot/imported/blood_splatter.pxo-3e2e611501b5ac1bc71818c587f017c7.res"
+
+[deps]
+
+source_file="res://effects/blood_splatter/blood_splatter.pxo"
+dest_files=["res://.godot/imported/blood_splatter.pxo-3e2e611501b5ac1bc71818c587f017c7.res"]
+
+[params]
+
+animation/default/name="default"
+animation/default/direction=0
+animation/default/repeat_count=0
+animation/autoplay_name=""
+animation/create_reset_animation=false
+atlas_textures/region_filter_clip_enabled=false
+middle_import_script=""
+post_import_script=""
+sprite_sheet/edges_artifacts_avoidance_method=0
+sprite_sheet/sprites_surrounding_color=Color(1, 1, 1, 0)
+sprite_sheet/layout=0
+sprite_sheet/max_cells_in_strip=0
+sprite_sheet/trim_sprites_to_overall_min_size=true
+sprite_sheet/collapse_transparent_sprites=true
+sprite_sheet/merge_duplicated_sprites=true
+layers/split_layers=false
+layers/animation_name_format=0

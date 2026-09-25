@@ -46,6 +46,7 @@ script/source = "extends CharacterBody2D
 @onready var collision_standing: CollisionShape2D = $CollisionShape2D
 @onready var collision_crouching: CollisionShape2D = $CollisionShape2D_crouch
 
+
 # for 2 player mode
 signal died(player: CharacterBody2D)
 #end 2 player mode
@@ -82,6 +83,8 @@ var edge_bend_direction: float = 0.0   # -1 = hängt nach links über, 1 = nach 
 #weil die Animation manchmal hängt
 var hit_reaction_timer: float = 0.0
 const HIT_REACTION_MAX_DURATION: float = 0.5
+
+const BloodSplatterScene := preload(\"res://effects/blood_splatter/blood_splatter.tscn\")
 
 func _ready() -> void:
 	animated_sprite.animation_finished.connect(_on_animation_finished)
@@ -333,14 +336,24 @@ func receive_hit(from_position: Vector2 = global_position) -> void:
 	if is_dead or is_hit_reacting:
 		return
 	is_hit_reacting = true
-	is_biting = false      # ein laufender eigener Biss wird unterbrochen
+	is_biting = false
 	is_block_starting = false
-	
+
 	var knockback_direction: float = sign(global_position.x - from_position.x)
 	if knockback_direction == 0:
 		knockback_direction = -1.0 if animated_sprite.flip_h else 1.0
 
 	velocity.x = knockback_direction * knockback_strength
+	print(\"Getroffener Charakter (\", name, \") ist bei: \", global_position)
+	_spawn_blood_splatter(knockback_direction)
+
+func _spawn_blood_splatter(direction: float) -> void:
+	var splatter := BloodSplatterScene.instantiate() as AnimatedSprite2D
+	var parent_node := get_parent()
+	parent_node.add_child(splatter)
+	splatter.global_position = global_position
+	splatter.flip_h = direction < 0
+	print(\"Splatter LOKALE position: \", splatter.position, \" | OFFSET: \", splatter.offset)
 
 func update_animation(direction: float, mouth_open: bool) -> void:
 	if direction != 0:
@@ -403,23 +416,22 @@ height = 26.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p0ndl"]
 radius = 3.0
-height = 25.290009
+height = 28.0
 
 [node name="maggot" type="CharacterBody2D" unique_id=863516334]
 platform_on_leave = 1
 script = SubResource("GDScript_uwrxv")
 
 [node name="WhiteLittleMaggot" type="AnimatedSprite2D" parent="." unique_id=1246855360]
-position = Vector2(140.855, 8)
 sprite_frames = ExtResource("1_p0ndl")
-animation = &"hit_mouth_closed"
+animation = &"bite_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1183608276]
-position = Vector2(141, 14)
+position = Vector2(0, 6)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_j0i20")
 
 [node name="CollisionShape2D_crouch" type="CollisionShape2D" parent="." unique_id=1198538209]
-position = Vector2(141, 15)
+position = Vector2(0, 7)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_p0ndl")
