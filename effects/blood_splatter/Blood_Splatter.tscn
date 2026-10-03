@@ -6,11 +6,14 @@
 resource_name = "blood_splatter"
 script/source = "extends AnimatedSprite2D
 
+const SPLATTER_ANIMATIONS := [\"splatter01\", \"splatter02\", \"splatter03\",\"splatter04\",\"splatter05\",\"splatter06\"]
+
 func _ready() -> void:
 	z_index = 4096
 	z_as_relative = false
 	animation_finished.connect(_on_animation_finished)
-	play(\"splatter01\")
+	var chosen_animation: String = SPLATTER_ANIMATIONS[randi() % SPLATTER_ANIMATIONS.size()]
+	play(chosen_animation)
 
 func _on_animation_finished() -> void:
 	queue_free()
@@ -20,6 +23,4 @@ func _on_animation_finished() -> void:
 z_index = 100
 sprite_frames = ExtResource("1_st8hb")
 animation = &"splatter01"
-frame = 4
-frame_progress = 1.0
 script = SubResource("GDScript_chlwr")

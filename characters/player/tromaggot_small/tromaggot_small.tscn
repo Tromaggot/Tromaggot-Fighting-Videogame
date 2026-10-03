@@ -344,7 +344,7 @@ func receive_hit(from_position: Vector2 = global_position) -> void:
 		knockback_direction = -1.0 if animated_sprite.flip_h else 1.0
 
 	velocity.x = knockback_direction * knockback_strength
-	print(\"Getroffener Charakter (\", name, \") ist bei: \", global_position)
+	#print(\"Getroffener Charakter (\", name, \") ist bei: \", global_position)
 	_spawn_blood_splatter(knockback_direction)
 
 func _spawn_blood_splatter(direction: float) -> void:
@@ -353,7 +353,7 @@ func _spawn_blood_splatter(direction: float) -> void:
 	parent_node.add_child(splatter)
 	splatter.global_position = global_position
 	splatter.flip_h = direction < 0
-	print(\"Splatter LOKALE position: \", splatter.position, \" | OFFSET: \", splatter.offset)
+#	print(\"Splatter LOKALE position: \", splatter.position, \" | OFFSET: \", splatter.offset)
 
 func update_animation(direction: float, mouth_open: bool) -> void:
 	if direction != 0:
@@ -427,11 +427,13 @@ sprite_frames = ExtResource("1_p0ndl")
 animation = &"bite_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1183608276]
+visible = false
 position = Vector2(0, 6)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_j0i20")
 
 [node name="CollisionShape2D_crouch" type="CollisionShape2D" parent="." unique_id=1198538209]
+visible = false
 position = Vector2(0, 7)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_p0ndl")
