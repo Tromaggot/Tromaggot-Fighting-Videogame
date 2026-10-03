@@ -8,15 +8,36 @@ script/source = "extends AnimatedSprite2D
 
 const SPLATTER_ANIMATIONS := [\"splatter01\", \"splatter02\", \"splatter03\",\"splatter04\",\"splatter05\",\"splatter06\"]
 
+@export var stain_rotation_min: float = 0.0
+@export var stain_rotation_max: float = 20.0
+@export var stain_offset_y_min: int = 6
+@export var stain_offset_y_max: int = 12
+
+@export var splash_z_index: int = 100     # während des Spritzens: vorne
+@export var stain_z_index: int = 1       # als liegender Fleck: hinten
+
 func _ready() -> void:
-	z_index = 4096
+	z_index = splash_z_index
 	z_as_relative = false
 	animation_finished.connect(_on_animation_finished)
 	var chosen_animation: String = SPLATTER_ANIMATIONS[randi() % SPLATTER_ANIMATIONS.size()]
 	play(chosen_animation)
 
 func _on_animation_finished() -> void:
+	_leave_stain()
 	queue_free()
+
+func _leave_stain() -> void:
+	var stain := Sprite2D.new()
+	stain.texture = sprite_frames.get_frame_texture(animation, frame)
+	stain.flip_h = flip_h
+	var random_offset_y: int = randi_range(stain_offset_y_min, stain_offset_y_max)
+	var random_rotation: float = randf_range(stain_rotation_min, stain_rotation_max)
+	stain.position = position + Vector2(0, random_offset_y)
+	stain.rotation_degrees = random_rotation
+	stain.z_index = stain_z_index
+	stain.z_as_relative = false
+	get_parent().add_child(stain)
 "
 
 [node name="BloodSplatter" type="AnimatedSprite2D" unique_id=1011755379]

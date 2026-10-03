@@ -87,6 +87,7 @@ const HIT_REACTION_MAX_DURATION: float = 0.5
 const BloodSplatterScene := preload(\"res://effects/blood_splatter/blood_splatter.tscn\")
 
 func _ready() -> void:
+	z_index = 2
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	add_to_group(\"players\")
 
