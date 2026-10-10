@@ -58,11 +58,11 @@ func _is_over_no_stain_zone(world_pos: Vector2) -> bool:
 	query.collide_with_bodies = false
 
 	var hits: Array[Dictionary] = get_world_2d().direct_space_state.intersect_shape(query)
-	print(\"Fleck-Check bei \", world_pos, \" | Treffer gesamt: \", hits.size())
+#	print(\"Fleck-Check bei \", world_pos, \" | Treffer gesamt: \", hits.size())
 	for hit in hits:
 		var collider: Object = hit[\"collider\"]
 		if collider is Node and (collider as Node).is_in_group(\"no_stain_zone\"):
-			print(\"  -> in Sperrzone, kein Fleck\")
+#			print(\"  -> in Sperrzone, kein Fleck\")
 			return true
 	return false
 "

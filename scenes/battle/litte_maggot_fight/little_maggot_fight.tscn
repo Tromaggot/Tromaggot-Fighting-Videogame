@@ -70,12 +70,54 @@ radius = 14.0
 resource_name = "camera_follow"
 script/source = "extends Camera2D
 
+@export var target: Node2D            # Spieler 1 (maggot), primäres Ziel
+@export var target2: Node2D           # Spieler 2, zieht die Kamera mit
+@export var edge_margin: float = 24.0 # Mindestabstand zum Bildrand, in Pixeln
 
-@export var target: Node2D
 
 func _process(_delta: float) -> void:
-	if target:
-		global_position.x = target.global_position.x
+	var primary: Node2D = _get_primary()
+	if primary == null:
+		return
+
+	var half_w: float = get_viewport_rect().size.x / zoom.x / 2.0
+	var px: float = primary.global_position.x
+	var cx: float = px   # Standard: Kamera folgt dem primären Spieler
+
+	var secondary: Node2D = _get_secondary(primary)
+	if secondary != null:
+		var sx: float = secondary.global_position.x
+
+		# Kamera so weit zu Spieler 2 hin verschieben, dass er im Bild bleibt
+		var upper: float = sx - edge_margin - offset.x + half_w
+		var lower: float = sx + edge_margin - offset.x - half_w
+		cx = clampf(cx, lower, upper)
+
+		# Spieler 1 darf dabei nie aus dem Bild verschwinden
+		var min_cx: float = px - offset.x - half_w + edge_margin
+		var max_cx: float = px - offset.x + half_w - edge_margin
+		cx = clampf(cx, min_cx, max_cx)
+
+	global_position.x = cx
+
+
+func _is_alive(node: Node2D) -> bool:
+	if node == null:
+		return false
+	return not (\"is_dead\" in node and node.is_dead)
+
+
+func _get_primary() -> Node2D:
+	if _is_alive(target):
+		return target
+	if _is_alive(target2):
+		return target2
+	return null
+
+
+func _get_secondary(primary: Node2D) -> Node2D:
+	var other: Node2D = target2 if primary == target else target
+	return other if _is_alive(other) else null
 "
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_77px3"]
@@ -263,7 +305,7 @@ knockback_strength = 250.0
 knockback_friction = 4.0
 death_y = 300.0
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target")]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target", "target2")]
 position = Vector2(118, -63)
 offset = Vector2(110, 15)
 zoom = Vector2(1.06, 1.06)
@@ -279,6 +321,7 @@ drag_right_margin = 0.06
 drag_bottom_margin = 0.04
 script = SubResource("GDScript_ndxi2")
 target = NodePath("../maggot")
+target2 = NodePath("../Player2")
 
 [node name="Control" type="Control" parent="." unique_id=442560925]
 layout_mode = 3
