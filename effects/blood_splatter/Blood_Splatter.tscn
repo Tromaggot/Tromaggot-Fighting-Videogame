@@ -16,6 +16,8 @@ const SPLATTER_ANIMATIONS := [\"splatter01\", \"splatter02\", \"splatter03\",\"s
 @export var splash_z_index: int = 100     # während des Spritzens: vorne
 @export var stain_z_index: int = 1       # als liegender Fleck: hinten
 
+@export var stain_check_radius: float = 8.0   # Größe des Prüfbereichs um den Fleck
+
 func _ready() -> void:
 	z_index = splash_z_index
 	z_as_relative = false
@@ -28,16 +30,41 @@ func _on_animation_finished() -> void:
 	queue_free()
 
 func _leave_stain() -> void:
+	var random_offset_y: int = randi_range(stain_offset_y_min, stain_offset_y_max)
+	var random_rotation: float = randf_range(stain_rotation_min, stain_rotation_max)
+
+	# Über einem Loch darf kein Fleck liegen bleiben
+	var stain_world_pos: Vector2 = global_position + Vector2(0, random_offset_y)
+	if _is_over_no_stain_zone(stain_world_pos):
+		return
+
 	var stain := Sprite2D.new()
 	stain.texture = sprite_frames.get_frame_texture(animation, frame)
 	stain.flip_h = flip_h
-	var random_offset_y: int = randi_range(stain_offset_y_min, stain_offset_y_max)
-	var random_rotation: float = randf_range(stain_rotation_min, stain_rotation_max)
 	stain.position = position + Vector2(0, random_offset_y)
 	stain.rotation_degrees = random_rotation
 	stain.z_index = stain_z_index
 	stain.z_as_relative = false
 	get_parent().add_child(stain)
+
+func _is_over_no_stain_zone(world_pos: Vector2) -> bool:
+	var shape := CircleShape2D.new()
+	shape.radius = stain_check_radius
+
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.transform = Transform2D(0.0, world_pos)
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+
+	var hits: Array[Dictionary] = get_world_2d().direct_space_state.intersect_shape(query)
+	print(\"Fleck-Check bei \", world_pos, \" | Treffer gesamt: \", hits.size())
+	for hit in hits:
+		var collider: Object = hit[\"collider\"]
+		if collider is Node and (collider as Node).is_in_group(\"no_stain_zone\"):
+			print(\"  -> in Sperrzone, kein Fleck\")
+			return true
+	return false
 "
 
 [node name="BloodSplatter" type="AnimatedSprite2D" unique_id=1011755379]

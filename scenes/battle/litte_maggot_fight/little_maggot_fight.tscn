@@ -51,6 +51,21 @@ height = 120.0
 radius = 24.0
 height = 80.0
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u5nq8"]
+size = Vector2(37, 25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cly10"]
+size = Vector2(19, 9)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gjctw"]
+size = Vector2(47.5, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fcvv1"]
+radius = 14.142136
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_u03w2"]
+radius = 14.0
+
 [sub_resource type="GDScript" id="GDScript_ndxi2"]
 resource_name = "camera_follow"
 script/source = "extends Camera2D
@@ -62,6 +77,45 @@ func _process(_delta: float) -> void:
 	if target:
 		global_position.x = target.global_position.x
 "
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_77px3"]
+radius = 19.026299
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_nanj3"]
+radius = 20.024984
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uij03"]
+radius = 19.026299
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_wfn0u"]
+radius = 18.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_acxis"]
+radius = 18.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jwsq1"]
+size = Vector2(41, 45)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nanj3"]
+size = Vector2(26, 21)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_77px3"]
+size = Vector2(27, 10.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uij03"]
+size = Vector2(25, 31)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wfn0u"]
+size = Vector2(22, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_acxis"]
+size = Vector2(23, 22)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fcvv1"]
+size = Vector2(21, 21)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u03w2"]
+size = Vector2(23, 20)
 
 [node name="LittleMaggotFight" type="Node2D" unique_id=452986831]
 
@@ -172,6 +226,31 @@ visible = false
 position = Vector2(-20, 119)
 shape = SubResource("CapsuleShape2D_6eexj")
 
+[node name="CollisionShape2D16" type="CollisionShape2D" parent="Ground" unique_id=1379724914]
+visible = false
+position = Vector2(116.5, 90.5)
+shape = SubResource("RectangleShape2D_u5nq8")
+
+[node name="CollisionShape2D17" type="CollisionShape2D" parent="Ground" unique_id=2080883838]
+visible = false
+position = Vector2(79, 83)
+shape = SubResource("RectangleShape2D_cly10")
+
+[node name="CollisionShape2D18" type="CollisionShape2D" parent="Ground" unique_id=1853264642]
+visible = false
+position = Vector2(447.75, 86)
+shape = SubResource("RectangleShape2D_gjctw")
+
+[node name="CollisionShape2D19" type="CollisionShape2D" parent="Ground" unique_id=159096807]
+visible = false
+position = Vector2(472, 90)
+shape = SubResource("CircleShape2D_fcvv1")
+
+[node name="CollisionShape2D20" type="CollisionShape2D" parent="Ground" unique_id=569071093]
+visible = false
+position = Vector2(424, 90)
+shape = SubResource("CircleShape2D_u03w2")
+
 [node name="maggot" parent="." unique_id=863516334 instance=ExtResource("1_b3fep")]
 z_index = 2
 position = Vector2(51, -81)
@@ -242,3 +321,70 @@ input_up = "p2_up"
 input_down = "p2_down"
 input_fire = "p2_fire"
 death_y = 300.0
+
+[node name="NoStainZone_Hole" type="Area2D" parent="." unique_id=1529583250 groups=["no_stain_zone"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=1341676851]
+visible = false
+position = Vector2(216, 113)
+shape = SubResource("CircleShape2D_77px3")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=429262641]
+visible = false
+position = Vector2(205, 105)
+shape = SubResource("CircleShape2D_nanj3")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=45103626]
+visible = false
+position = Vector2(194, 97)
+shape = SubResource("CircleShape2D_uij03")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=1811067927]
+visible = false
+position = Vector2(180, 91)
+shape = SubResource("CircleShape2D_wfn0u")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=772994121]
+visible = false
+position = Vector2(163, 88)
+shape = SubResource("CircleShape2D_acxis")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=1530523763]
+visible = false
+position = Vector2(-65.5, 102)
+shape = SubResource("RectangleShape2D_jwsq1")
+
+[node name="CollisionShape2D7" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=463397441]
+visible = false
+position = Vector2(-53, 87.5)
+shape = SubResource("RectangleShape2D_nanj3")
+
+[node name="CollisionShape2D8" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=1924904164]
+visible = false
+position = Vector2(-47.5, 79.25)
+shape = SubResource("RectangleShape2D_77px3")
+
+[node name="CollisionShape2D9" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=95416582]
+visible = false
+position = Vector2(550, 98)
+shape = SubResource("RectangleShape2D_uij03")
+
+[node name="CollisionShape2D10" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=687399978]
+visible = false
+position = Vector2(545, 83)
+shape = SubResource("RectangleShape2D_wfn0u")
+
+[node name="CollisionShape2D11" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=882025112]
+visible = false
+position = Vector2(541.5, 79)
+shape = SubResource("RectangleShape2D_acxis")
+
+[node name="CollisionShape2D12" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=919422283]
+visible = false
+position = Vector2(538.5, 74.5)
+shape = SubResource("RectangleShape2D_fcvv1")
+
+[node name="CollisionShape2D13" type="CollisionShape2D" parent="NoStainZone_Hole" unique_id=1289494928]
+visible = false
+position = Vector2(535.5, 70)
+shape = SubResource("RectangleShape2D_u03w2")
