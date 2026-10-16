@@ -8,10 +8,14 @@ script/source = "extends AnimatedSprite2D
 
 const SPLATTER_ANIMATIONS := [\"splatter01\", \"splatter02\", \"splatter03\",\"splatter04\",\"splatter05\",\"splatter06\"]
 
-@export var stain_rotation_min: float = 0.0
-@export var stain_rotation_max: float = 20.0
-@export var stain_offset_y_min: int = 6
-@export var stain_offset_y_max: int = 12
+@export_group(\"Stain Rotation\")
+@export var rotation_from_left_start: float = -2.0     # Biss kam von links
+@export var rotation_from_left_end: float = -25.0
+@export var rotation_from_right_start: float = 25.0   # Biss kam von rechts
+@export var rotation_from_right_end: float = 2.0
+
+@export var stain_offset_y_min: int = 9
+@export var stain_offset_y_max: int = 14
 
 @export var splash_z_index: int = 100     # während des Spritzens: vorne
 @export var stain_z_index: int = 1       # als liegender Fleck: hinten
@@ -31,7 +35,13 @@ func _on_animation_finished() -> void:
 
 func _leave_stain() -> void:
 	var random_offset_y: int = randi_range(stain_offset_y_min, stain_offset_y_max)
-	var random_rotation: float = randf_range(stain_rotation_min, stain_rotation_max)
+	var random_rotation: float
+	if flip_h:
+		# flip_h = true bedeutet: Biss kam von rechts
+		random_rotation = randf_range(rotation_from_right_start, rotation_from_right_end)
+	else:
+		# Biss kam von links
+		random_rotation = randf_range(rotation_from_left_start, rotation_from_left_end)
 
 	# Über einem Loch darf kein Fleck liegen bleiben
 	var stain_world_pos: Vector2 = global_position + Vector2(0, random_offset_y)
@@ -72,3 +82,4 @@ z_index = 100
 sprite_frames = ExtResource("1_st8hb")
 animation = &"splatter01"
 script = SubResource("GDScript_chlwr")
+stain_offset_y_max = 10
