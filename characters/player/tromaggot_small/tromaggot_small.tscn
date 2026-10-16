@@ -28,6 +28,7 @@ script/source = "extends CharacterBody2D
 @export var hit_max_vertical_distance: float = 10.0   # max. Höhenunterschied, bei dem ein Biss noch trifft
 @export var knockback_strength: float = 150.0
 @export var knockback_friction: float = 8.0   # wie schnell der Stoß abklingt
+@export var block_knockback_multiplier: float = 0.5   # wie stark der Stoß beim Blocken ausfällt
 
 # for 2 player mode
 @export_group(\"Input Actions\")
@@ -46,6 +47,16 @@ script/source = "extends CharacterBody2D
 @onready var collision_standing: CollisionShape2D = $CollisionShape2D
 @onready var collision_crouching: CollisionShape2D = $CollisionShape2D_crouch
 
+@export_group(\"Damage\")
+@export var hits_until_injured: int = 3
+@export var injured_speed_multiplier: float = 0.6    # 70 % der normalen Geschwindigkeit
+@export var injured_jump_multiplier: float = 0.85    # etwas niedrigere Sprünge
+@export var injured_sprite_frames: SpriteFrames      # optional: eigene verletzte Grafik
+@export var injured_tint: Color = Color(0.979, 0.0, 0.279, 1.0)   # Platzhalter, solange es keine eigene Grafik gibt
+
+var hits_taken: int = 0
+var is_injured: bool = false
+var is_blocking: bool = false
 
 # for 2 player mode
 signal died(player: CharacterBody2D)
@@ -121,7 +132,7 @@ func _physics_process(delta: float) -> void:
 	is_crouching = Input.is_action_pressed(input_down) and is_on_floor() and not is_landing and not is_biting
 	
 	# Beißen nur erlauben, wenn NICHT im reinen Block-Zustand (ducken ohne Richtung)
-	var is_blocking := is_crouching and direction == 0.0
+	is_blocking = is_crouching and direction == 0.0
 	
 		# Übergang erkennen: Mund öffnet sich neu, während geblockt wird
 	# Übergang erkennen: entweder öffnet sich der Mund neu während geblockt wird,
@@ -148,6 +159,8 @@ func _physics_process(delta: float) -> void:
 		var current_jump_velocity := jump_velocity
 		if mouth_open:
 			current_jump_velocity *= fire_jump_multiplier
+		if is_injured:
+			current_jump_velocity *= injured_jump_multiplier
 		pending_jump_velocity = current_jump_velocity
 		is_jump_starting = true
 		jump_windup_timer = jump_windup_frames
@@ -160,6 +173,8 @@ func _physics_process(delta: float) -> void:
 	var current_speed := crouch_speed if is_crouching else speed
 	if mouth_open and not is_crouching:
 		current_speed *= fire_speed_multiplier
+	if is_injured:
+		current_speed *= injured_speed_multiplier
 	
 	if is_hit_reacting:
 		# Während der Hit-Reaktion keine normale Bewegung, nur der Stoß klingt langsam ab
@@ -333,20 +348,42 @@ func _check_bite_hit() -> void:
 
 
 func receive_hit(from_position: Vector2 = global_position) -> void:
-	hit_reaction_timer = HIT_REACTION_MAX_DURATION
 	if is_dead or is_hit_reacting:
 		return
-	is_hit_reacting = true
-	is_biting = false
-	is_block_starting = false
 
 	var knockback_direction: float = sign(global_position.x - from_position.x)
 	if knockback_direction == 0:
 		knockback_direction = -1.0 if animated_sprite.flip_h else 1.0
 
+	# Geblockt: abprallen, aber kein Schaden, keine Hit-Reaktion, kein Blut
+	if is_blocking:
+		velocity.x = knockback_direction * knockback_strength * block_knockback_multiplier
+		return
+
+	hit_reaction_timer = HIT_REACTION_MAX_DURATION
+	is_hit_reacting = true
+	is_biting = false
+	is_block_starting = false
+
+	hits_taken += 1
+	if not is_injured and hits_taken >= hits_until_injured:
+		_become_injured()
+
 	velocity.x = knockback_direction * knockback_strength
-	#print(\"Getroffener Charakter (\", name, \") ist bei: \", global_position)
 	_spawn_blood_splatter(knockback_direction)
+
+func _become_injured() -> void:
+	is_injured = true
+
+	if injured_sprite_frames != null:
+		var current_anim: StringName = animated_sprite.animation
+		var current_frame: int = animated_sprite.frame
+		animated_sprite.sprite_frames = injured_sprite_frames
+		if injured_sprite_frames.has_animation(current_anim):
+			animated_sprite.play(current_anim)
+			animated_sprite.frame = current_frame
+	else:
+		animated_sprite.modulate = injured_tint
 
 func _spawn_blood_splatter(direction: float) -> void:
 	var splatter := BloodSplatterScene.instantiate() as AnimatedSprite2D

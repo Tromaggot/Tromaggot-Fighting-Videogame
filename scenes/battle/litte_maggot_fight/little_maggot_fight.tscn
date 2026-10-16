@@ -5,6 +5,7 @@
 [ext_resource type="SpriteFrames" uid="uid://i387g61ridyn" path="res://scenes/battle/litte_maggot_fight/background/rohrboden.pxo" id="2_0xtja"]
 [ext_resource type="Texture2D" uid="uid://b8tchfqets8iv" path="res://scenes/battle/litte_maggot_fight/background/dark_pipe.png" id="2_488k2"]
 [ext_resource type="Texture2D" uid="uid://ieffb40ptno1" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_closed_64x64.png" id="5_gm0fg"]
+[ext_resource type="SpriteFrames" uid="uid://83pm480xlst3" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured.pxo" id="5_tjjtg"]
 [ext_resource type="Texture2D" uid="uid://bpqngq6uxfe4r" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_open_64x64.png" id="6_tjjtg"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qwwbc"]
@@ -304,6 +305,8 @@ hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
 death_y = 300.0
+injured_sprite_frames = ExtResource("5_tjjtg")
+injured_tint = Color(0.99999374, 0.43981433, 0.4754578, 1)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target", "target2")]
 position = Vector2(118, -63)
@@ -364,6 +367,8 @@ input_up = "p2_up"
 input_down = "p2_down"
 input_fire = "p2_fire"
 death_y = 300.0
+injured_sprite_frames = ExtResource("5_tjjtg")
+injured_tint = Color(0.9999959, 0.48300123, 0.50937086, 1)
 
 [node name="NoStainZone_Hole" type="Area2D" parent="." unique_id=1529583250 groups=["no_stain_zone"]]
 
