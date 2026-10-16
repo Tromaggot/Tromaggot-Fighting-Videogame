@@ -48,14 +48,16 @@ script/source = "extends CharacterBody2D
 @onready var collision_crouching: CollisionShape2D = $CollisionShape2D_crouch
 
 @export_group(\"Damage\")
-@export var hits_until_injured: int = 3
-@export var injured_speed_multiplier: float = 0.6    # 70 % der normalen Geschwindigkeit
-@export var injured_jump_multiplier: float = 0.85    # etwas niedrigere Sprünge
-@export var injured_sprite_frames: SpriteFrames      # optional: eigene verletzte Grafik
-@export var injured_tint: Color = Color(0.979, 0.0, 0.279, 1.0)   # Platzhalter, solange es keine eigene Grafik gibt
+@export var injury_stage_hits: Array[int] = [3, 6, 9, 12]       # Treffer, ab denen Stufe 1 bis 4 beginnt
+@export var hits_until_death: int = 15                           # Treffer, bei denen der Charakter stirbt
+@export var injury_stage_frames: Array[SpriteFrames] = []        # injured01 bis injured04
+@export var injury_speed_multipliers: Array[float] = [0.85, 0.7, 0.55, 0.4]
+@export var injury_jump_multipliers: Array[float] = [0.95, 0.85, 0.75, 0.6]
+@export var death_sprite_frames: SpriteFrames                    # optional, Animation \"death\"
 
 var hits_taken: int = 0
-var is_injured: bool = false
+var injury_stage: int = 0   # 0 = gesund, 1 bis 4 = verletzt
+
 var is_blocking: bool = false
 
 # for 2 player mode
@@ -159,8 +161,7 @@ func _physics_process(delta: float) -> void:
 		var current_jump_velocity := jump_velocity
 		if mouth_open:
 			current_jump_velocity *= fire_jump_multiplier
-		if is_injured:
-			current_jump_velocity *= injured_jump_multiplier
+		current_jump_velocity *= _get_injury_jump_multiplier()
 		pending_jump_velocity = current_jump_velocity
 		is_jump_starting = true
 		jump_windup_timer = jump_windup_frames
@@ -173,8 +174,7 @@ func _physics_process(delta: float) -> void:
 	var current_speed := crouch_speed if is_crouching else speed
 	if mouth_open and not is_crouching:
 		current_speed *= fire_speed_multiplier
-	if is_injured:
-		current_speed *= injured_speed_multiplier
+	current_speed *= _get_injury_speed_multiplier()
 	
 	if is_hit_reacting:
 		# Während der Hit-Reaktion keine normale Bewegung, nur der Stoß klingt langsam ab
@@ -202,6 +202,57 @@ func _physics_process(delta: float) -> void:
 func _check_death_zone() -> void:
 	if global_position.y > death_y and not is_dead:
 		_die()
+
+func _update_injury_stage() -> void:
+	if hits_taken >= hits_until_death:
+		_die_from_hits()
+		return
+
+	var new_stage: int = 0
+	for i in injury_stage_hits.size():
+		if hits_taken >= injury_stage_hits[i]:
+			new_stage = i + 1
+
+	if new_stage != injury_stage:
+		injury_stage = new_stage
+		_apply_injury_frames()
+
+
+func _apply_injury_frames() -> void:
+	var index: int = injury_stage - 1
+	if index < 0 or index >= injury_stage_frames.size():
+		return
+	var frames: SpriteFrames = injury_stage_frames[index]
+	if frames == null:
+		return
+
+	var current_anim: StringName = animated_sprite.animation
+	var current_frame: int = animated_sprite.frame
+	animated_sprite.sprite_frames = frames
+	if frames.has_animation(current_anim):
+		animated_sprite.play(current_anim)
+		animated_sprite.frame = current_frame
+
+
+func _die_from_hits() -> void:
+	if death_sprite_frames != null:
+		animated_sprite.sprite_frames = death_sprite_frames
+		if death_sprite_frames.has_animation(\"death\"):
+			animated_sprite.rotation = 0.0
+			animated_sprite.play(\"death\")
+	_die()
+
+
+func _get_injury_speed_multiplier() -> float:
+	if injury_stage <= 0 or injury_stage > injury_speed_multipliers.size():
+		return 1.0
+	return injury_speed_multipliers[injury_stage - 1]
+
+
+func _get_injury_jump_multiplier() -> float:
+	if injury_stage <= 0 or injury_stage > injury_jump_multipliers.size():
+		return 1.0
+	return injury_jump_multipliers[injury_stage - 1]
 
 func _die() -> void:
 	is_dead = true
@@ -366,24 +417,11 @@ func receive_hit(from_position: Vector2 = global_position) -> void:
 	is_block_starting = false
 
 	hits_taken += 1
-	if not is_injured and hits_taken >= hits_until_injured:
-		_become_injured()
+	_update_injury_stage()
 
 	velocity.x = knockback_direction * knockback_strength
 	_spawn_blood_splatter(knockback_direction)
 
-func _become_injured() -> void:
-	is_injured = true
-
-	if injured_sprite_frames != null:
-		var current_anim: StringName = animated_sprite.animation
-		var current_frame: int = animated_sprite.frame
-		animated_sprite.sprite_frames = injured_sprite_frames
-		if injured_sprite_frames.has_animation(current_anim):
-			animated_sprite.play(current_anim)
-			animated_sprite.frame = current_frame
-	else:
-		animated_sprite.modulate = injured_tint
 
 func _spawn_blood_splatter(direction: float) -> void:
 	var splatter := BloodSplatterScene.instantiate() as AnimatedSprite2D
