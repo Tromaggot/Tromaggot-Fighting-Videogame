@@ -8,6 +8,10 @@
 [ext_resource type="SpriteFrames" uid="uid://83pm480xlst3" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured.pxo" id="5_tjjtg"]
 [ext_resource type="SpriteFrames" uid="uid://8a78f46jvb46" path="res://characters/player/player_sprites/tromaggotLittleWhite_death.pxo" id="6_qwwbc"]
 [ext_resource type="Texture2D" uid="uid://bpqngq6uxfe4r" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_open_64x64.png" id="6_tjjtg"]
+[ext_resource type="SpriteFrames" uid="uid://ki8026kavbft" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_01.pxo" id="6_v2jwp"]
+[ext_resource type="SpriteFrames" uid="uid://yso03qdmlr2h" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_02.pxo" id="7_84yk3"]
+[ext_resource type="SpriteFrames" uid="uid://83naa8bjsqi7" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_03.pxo" id="8_84yk3"]
+[ext_resource type="SpriteFrames" uid="uid://b2wu028246cvk" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_04.pxo" id="9_84uib"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qwwbc"]
 size = Vector2(267, 15)
@@ -306,7 +310,11 @@ hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
 death_y = 300.0
-injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("5_tjjtg"), ExtResource("5_tjjtg"), ExtResource("5_tjjtg")])
+injury_stage_hits = Array[int]([3, 6, 9, 12, 15])
+hits_until_death = 20
+injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib")])
+injury_speed_multipliers = Array[float]([0.85, 0.7, 0.55, 0.4, 0.2])
+injury_jump_multipliers = Array[float]([0.95, 0.85, 0.75, 0.6, 0.2])
 death_sprite_frames = ExtResource("6_qwwbc")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target", "target2")]
@@ -368,7 +376,11 @@ input_up = "p2_up"
 input_down = "p2_down"
 input_fire = "p2_fire"
 death_y = 300.0
-injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("5_tjjtg"), ExtResource("5_tjjtg"), ExtResource("5_tjjtg")])
+injury_stage_hits = Array[int]([3, 6, 9, 12, 15])
+hits_until_death = 20
+injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib")])
+injury_speed_multipliers = Array[float]([0.85, 0.7, 0.55, 0.4, 0.2])
+injury_jump_multipliers = Array[float]([0.95, 0.85, 0.75, 0.6, 0.3])
 death_sprite_frames = ExtResource("6_qwwbc")
 
 [node name="NoStainZone_Hole" type="Area2D" parent="." unique_id=1529583250 groups=["no_stain_zone"]]
