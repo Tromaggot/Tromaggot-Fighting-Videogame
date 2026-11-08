@@ -48,12 +48,23 @@ script/source = "extends CharacterBody2D
 @onready var collision_crouching: CollisionShape2D = $CollisionShape2D_crouch
 
 @export_group(\"Damage\")
-@export var injury_stage_hits: Array[int] = [3, 6, 9, 12]       # Treffer, ab denen Stufe 1 bis 4 beginnt
-@export var hits_until_death: int = 15                           # Treffer, bei denen der Charakter stirbt
+@export var injury_stage_hits: Array[int] = [3, 6, 9, 12, 15]       # Treffer, ab denen Stufe 1 bis 5 beginnt
+@export var hits_until_death: int = 17                           # Treffer, bei denen der Charakter stirbt
 @export var injury_stage_frames: Array[SpriteFrames] = []        # injured01 bis injured04
-@export var injury_speed_multipliers: Array[float] = [0.85, 0.7, 0.55, 0.4]
-@export var injury_jump_multipliers: Array[float] = [0.95, 0.85, 0.75, 0.6]
+@export var injury_speed_multipliers: Array[float] = [0.85, 0.7, 0.55, 0.4, 0.15]
+@export var injury_jump_multipliers: Array[float] = [0.95, 0.85, 0.75, 0.6, 0.4]
 @export var death_sprite_frames: SpriteFrames                    # optional, Animation \"death\"
+
+@export_group(\"Blood Pool\")
+@export var blood_pool_scene: PackedScene
+@export var blood_pool_offset: Vector2 = Vector2(0, 8)   # Y: Höhe der Lache relativ zum Sprite
+
+@export_group(\"Severed Tail\")
+@export var tail_piece_texture: Texture2D
+@export var tail_piece_stage: int = 5                       # ab dieser Verletzungsstufe fällt der Schwanz ab
+@export var tail_piece_offset: Vector2 = Vector2(14, 6)     # X = Abstand nach hinten (positiv eintragen), Y = Höhe
+@export var tail_piece_rotation_degrees: float = 0.0
+@export var tail_piece_z_index: int = 2
 
 var hits_taken: int = 0
 var injury_stage: int = 0   # 0 = gesund, 1 bis 4 = verletzt
@@ -100,7 +111,7 @@ const HIT_REACTION_MAX_DURATION: float = 0.5
 const BloodSplatterScene := preload(\"res://effects/blood_splatter/blood_splatter.tscn\")
 
 func _ready() -> void:
-	z_index = 2
+	z_index = 3
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	add_to_group(\"players\")
 
@@ -203,7 +214,7 @@ func _check_death_zone() -> void:
 	if global_position.y > death_y and not is_dead:
 		_die()
 
-func _update_injury_stage() -> void:
+func _update_injury_stage(hit_direction: float = 0.0) -> void:
 	if hits_taken >= hits_until_death:
 		_die_from_hits()
 		return
@@ -214,8 +225,12 @@ func _update_injury_stage() -> void:
 			new_stage = i + 1
 
 	if new_stage != injury_stage:
+		var previous_stage: int = injury_stage
 		injury_stage = new_stage
 		_apply_injury_frames()
+		if new_stage >= tail_piece_stage and previous_stage < tail_piece_stage:
+			var tail_position: Vector2 = _drop_tail_piece()
+			_spawn_blood_pool(tail_position, hit_direction)
 
 
 func _apply_injury_frames() -> void:
@@ -233,6 +248,19 @@ func _apply_injury_frames() -> void:
 		animated_sprite.play(current_anim)
 		animated_sprite.frame = current_frame
 
+func _drop_tail_piece() -> Vector2:
+	var facing_left: bool = animated_sprite.flip_h
+	var behind: float = 1.0 if facing_left else -1.0   # der Schwanz liegt hinter dem Kopf
+	var drop_position: Vector2 = animated_sprite.global_position + Vector2(behind * absf(tail_piece_offset.x), tail_piece_offset.y)
+
+	if tail_piece_texture != null:
+		var rotation_deg: float = -tail_piece_rotation_degrees if facing_left else tail_piece_rotation_degrees
+		var piece := SeveredTail.new()
+		piece.setup(tail_piece_texture, facing_left, rotation_deg, tail_piece_z_index)
+		get_parent().add_child(piece)
+		piece.global_position = drop_position
+
+	return drop_position
 
 func _die_from_hits() -> void:
 	if death_sprite_frames != null:
@@ -417,11 +445,18 @@ func receive_hit(from_position: Vector2 = global_position) -> void:
 	is_block_starting = false
 
 	hits_taken += 1
-	_update_injury_stage()
+	_update_injury_stage(knockback_direction)
 
 	velocity.x = knockback_direction * knockback_strength
 	_spawn_blood_splatter(knockback_direction)
 
+func _spawn_blood_pool(world_position: Vector2, direction: float) -> void:
+	if blood_pool_scene == null:
+		return
+	var pool := blood_pool_scene.instantiate() as BloodPool
+	get_parent().add_child(pool)
+	pool.global_position = world_position + blood_pool_offset
+	pool.start(direction < 0.0)
 
 func _spawn_blood_splatter(direction: float) -> void:
 	var splatter := BloodSplatterScene.instantiate() as AnimatedSprite2D
@@ -497,6 +532,38 @@ height = 28.0
 [node name="maggot" type="CharacterBody2D" unique_id=863516334]
 platform_on_leave = 1
 script = SubResource("GDScript_uwrxv")
+speed = null
+crouch_speed = null
+jump_velocity = null
+gravity = null
+fire_speed_multiplier = null
+fire_jump_multiplier = null
+jump_windup_frames = null
+floor_rotation_speed = null
+push_strength = null
+body_half_width = null
+edge_bend_margin = null
+hit_range = null
+hit_max_vertical_distance = null
+knockback_strength = null
+knockback_friction = null
+block_knockback_multiplier = null
+input_left = null
+input_right = null
+input_up = null
+input_down = null
+input_fire = null
+death_y = null
+injury_stage_hits = null
+hits_until_death = null
+injury_stage_frames = null
+injury_speed_multipliers = null
+injury_jump_multipliers = null
+blood_pool_offset = null
+tail_piece_stage = null
+tail_piece_offset = null
+tail_piece_rotation_degrees = null
+tail_piece_z_index = null
 
 [node name="WhiteLittleMaggot" type="AnimatedSprite2D" parent="." unique_id=1246855360]
 sprite_frames = ExtResource("1_p0ndl")

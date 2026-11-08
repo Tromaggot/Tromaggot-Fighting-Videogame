@@ -12,6 +12,8 @@
 [ext_resource type="SpriteFrames" uid="uid://yso03qdmlr2h" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_02.pxo" id="7_84yk3"]
 [ext_resource type="SpriteFrames" uid="uid://83naa8bjsqi7" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_03.pxo" id="8_84yk3"]
 [ext_resource type="SpriteFrames" uid="uid://b2wu028246cvk" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_04.pxo" id="9_84uib"]
+[ext_resource type="Texture2D" uid="uid://bqb6kci7q51iv" path="res://characters/player/player_sprites/tail_piece.pxo" id="11_pumro"]
+[ext_resource type="PackedScene" uid="uid://q7l3qu7guax6" path="res://effects/blood_splatter/blood_pool.tscn" id="11_ug12j"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qwwbc"]
 size = Vector2(267, 15)
@@ -304,18 +306,41 @@ z_index = 2
 position = Vector2(51, -81)
 floor_max_angle = 1.0471976
 floor_snap_length = 9.0
+speed = null
+crouch_speed = null
+jump_velocity = null
+gravity = null
+fire_speed_multiplier = null
+fire_jump_multiplier = null
+jump_windup_frames = null
+floor_rotation_speed = null
+push_strength = null
 body_half_width = 8.0
+edge_bend_margin = null
 hit_range = 30.0
 hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
+block_knockback_multiplier = null
+input_left = null
+input_right = null
+input_up = null
+input_down = null
+input_fire = null
 death_y = 300.0
-injury_stage_hits = Array[int]([3, 6, 9, 12, 15])
-hits_until_death = 20
+injury_stage_hits = null
+hits_until_death = null
 injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib")])
-injury_speed_multipliers = Array[float]([0.85, 0.7, 0.55, 0.4, 0.2])
-injury_jump_multipliers = Array[float]([0.95, 0.85, 0.75, 0.6, 0.2])
+injury_speed_multipliers = null
+injury_jump_multipliers = null
 death_sprite_frames = ExtResource("6_qwwbc")
+blood_pool_scene = ExtResource("11_ug12j")
+blood_pool_offset = Vector2(0, 7)
+tail_piece_texture = ExtResource("11_pumro")
+tail_piece_stage = null
+tail_piece_offset = null
+tail_piece_rotation_degrees = 15.0
+tail_piece_z_index = null
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target", "target2")]
 position = Vector2(118, -63)
@@ -365,23 +390,41 @@ action = "fire"
 [node name="Player2" parent="." unique_id=1755591560 instance=ExtResource("1_b3fep")]
 z_index = 2
 position = Vector2(201, -80)
+speed = null
+crouch_speed = null
+jump_velocity = null
+gravity = null
+fire_speed_multiplier = null
+fire_jump_multiplier = null
+jump_windup_frames = null
+floor_rotation_speed = null
+push_strength = null
 body_half_width = 8.0
+edge_bend_margin = null
 hit_range = 30.0
 hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
+block_knockback_multiplier = null
 input_left = "p2_left"
 input_right = "p2_right"
 input_up = "p2_up"
 input_down = "p2_down"
 input_fire = "p2_fire"
 death_y = 300.0
-injury_stage_hits = Array[int]([3, 6, 9, 12, 15])
-hits_until_death = 20
+injury_stage_hits = null
+hits_until_death = null
 injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib")])
-injury_speed_multipliers = Array[float]([0.85, 0.7, 0.55, 0.4, 0.2])
-injury_jump_multipliers = Array[float]([0.95, 0.85, 0.75, 0.6, 0.3])
+injury_speed_multipliers = null
+injury_jump_multipliers = null
 death_sprite_frames = ExtResource("6_qwwbc")
+blood_pool_scene = ExtResource("11_ug12j")
+blood_pool_offset = Vector2(0, 7)
+tail_piece_texture = ExtResource("11_pumro")
+tail_piece_stage = null
+tail_piece_offset = null
+tail_piece_rotation_degrees = 15.0
+tail_piece_z_index = null
 
 [node name="NoStainZone_Hole" type="Area2D" parent="." unique_id=1529583250 groups=["no_stain_zone"]]
 
