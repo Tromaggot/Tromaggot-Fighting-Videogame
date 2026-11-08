@@ -5,7 +5,7 @@
 [ext_resource type="SpriteFrames" uid="uid://i387g61ridyn" path="res://scenes/battle/litte_maggot_fight/background/rohrboden.pxo" id="2_0xtja"]
 [ext_resource type="Texture2D" uid="uid://b8tchfqets8iv" path="res://scenes/battle/litte_maggot_fight/background/dark_pipe.png" id="2_488k2"]
 [ext_resource type="Texture2D" uid="uid://ieffb40ptno1" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_closed_64x64.png" id="5_gm0fg"]
-[ext_resource type="SpriteFrames" uid="uid://83pm480xlst3" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured.pxo" id="5_tjjtg"]
+[ext_resource type="SpriteFrames" uid="uid://cto1icfobxqc6" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_00.pxo" id="5_ug12j"]
 [ext_resource type="SpriteFrames" uid="uid://8a78f46jvb46" path="res://characters/player/player_sprites/tromaggotLittleWhite_death.pxo" id="6_qwwbc"]
 [ext_resource type="Texture2D" uid="uid://bpqngq6uxfe4r" path="res://characters/player/tromaggot_small/tromaggot_head_white_mouth_open_64x64.png" id="6_tjjtg"]
 [ext_resource type="SpriteFrames" uid="uid://ki8026kavbft" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_01.pxo" id="6_v2jwp"]
@@ -306,41 +306,19 @@ z_index = 2
 position = Vector2(51, -81)
 floor_max_angle = 1.0471976
 floor_snap_length = 9.0
-speed = null
-crouch_speed = null
-jump_velocity = null
-gravity = null
-fire_speed_multiplier = null
-fire_jump_multiplier = null
-jump_windup_frames = null
-floor_rotation_speed = null
-push_strength = null
 body_half_width = 8.0
-edge_bend_margin = null
 hit_range = 30.0
 hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
-block_knockback_multiplier = null
-input_left = null
-input_right = null
-input_up = null
-input_down = null
-input_fire = null
 death_y = 300.0
-injury_stage_hits = null
-hits_until_death = null
-injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib")])
-injury_speed_multipliers = null
-injury_jump_multipliers = null
+injury_stage_frames = Array[SpriteFrames]([ExtResource("5_ug12j"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib"), ExtResource("9_84uib")])
 death_sprite_frames = ExtResource("6_qwwbc")
 blood_pool_scene = ExtResource("11_ug12j")
 blood_pool_offset = Vector2(0, 7)
+death_pool_scene = ExtResource("11_ug12j")
 tail_piece_texture = ExtResource("11_pumro")
-tail_piece_stage = null
-tail_piece_offset = null
 tail_piece_rotation_degrees = 15.0
-tail_piece_z_index = null
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=68068334 node_paths=PackedStringArray("target", "target2")]
 position = Vector2(118, -63)
@@ -390,41 +368,24 @@ action = "fire"
 [node name="Player2" parent="." unique_id=1755591560 instance=ExtResource("1_b3fep")]
 z_index = 2
 position = Vector2(201, -80)
-speed = null
-crouch_speed = null
-jump_velocity = null
-gravity = null
-fire_speed_multiplier = null
-fire_jump_multiplier = null
-jump_windup_frames = null
-floor_rotation_speed = null
-push_strength = null
 body_half_width = 8.0
-edge_bend_margin = null
 hit_range = 30.0
 hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
-block_knockback_multiplier = null
 input_left = "p2_left"
 input_right = "p2_right"
 input_up = "p2_up"
 input_down = "p2_down"
 input_fire = "p2_fire"
 death_y = 300.0
-injury_stage_hits = null
-hits_until_death = null
-injury_stage_frames = Array[SpriteFrames]([ExtResource("5_tjjtg"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib")])
-injury_speed_multipliers = null
-injury_jump_multipliers = null
+injury_stage_frames = Array[SpriteFrames]([ExtResource("5_ug12j"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib"), ExtResource("9_84uib")])
 death_sprite_frames = ExtResource("6_qwwbc")
 blood_pool_scene = ExtResource("11_ug12j")
 blood_pool_offset = Vector2(0, 7)
+death_pool_scene = ExtResource("11_ug12j")
 tail_piece_texture = ExtResource("11_pumro")
-tail_piece_stage = null
-tail_piece_offset = null
 tail_piece_rotation_degrees = 15.0
-tail_piece_z_index = null
 
 [node name="NoStainZone_Hole" type="Area2D" parent="." unique_id=1529583250 groups=["no_stain_zone"]]
 
