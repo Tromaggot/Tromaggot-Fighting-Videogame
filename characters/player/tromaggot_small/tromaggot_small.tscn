@@ -17,6 +17,11 @@ script/source = "extends CharacterBody2D
 @export_group(\"Pushing\")
 @export var push_strength: float = 0.4   # Anteil der eigenen Geschwindigkeit, mit der geschoben wird
 
+@export var tail_drop_knockback_multiplier: float = 1.5   # Stoßfaktor, wenn der Schwanz abfällt
+var pending_knockback_multiplier: float = 1.0
+
+@export var death_knockback_multiplier: float = 0.3   # Stoßfaktor beim Todesbiss (0 = gar kein Stoß)
+
 @export_group(\"Turning\")
 @export var turn_flips_at_start: bool = false   # false: Spiegelung erst NACH der Drehanimation
 
@@ -46,6 +51,27 @@ var turn_target_flip: bool = false
 
 @export_group(\"Death Zone\")
 @export var death_y: float = 1000.0   # Y-Position, ab der ein Charakter als \"gefallen\" gilt
+@export var dead_friction: float = 120.0   # wie schnell ein Toter am Boden ausrutscht
+
+@export var death_pool_settle_speed: float = 5.0   # unter diesem Tempo gilt der Tote als liegen geblieben
+
+var death_pool_pending: bool = false
+var death_pool_direction: float = 0.0
+
+@export_group(\"Death Push\")
+@export var death_push_animation: StringName = &\"death_pushed\"
+@export var death_push_min_speed: float = 8.0   # ab diesem Tempo gilt der Tote als \"weggeschoben\"
+
+var death_anim_finished: bool = false
+var is_death_pushed: bool = false
+
+@export_group(\"Corpse Knockback\")
+@export var corpse_knockback_strength: float = 110.0      # Stoß, wenn ein Toter gebissen wird
+@export var corpse_spin_degrees_per_second: float = 360.0 # Startdrehung in Stoßrichtung
+@export var corpse_spin_decay_degrees: float = 720.0      # wie schnell die Drehung ausläuft (Grad/s²)
+
+var corpse_spin: float = 0.0   # aktuelle Drehung in rad/s
+
 
 #end 2 player mode
 
@@ -128,13 +154,12 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
+		_dead_physics(delta)
 		return  # tote Charaktere reagieren nicht mehr auf Input/Physik
 		
 	
 	if is_hit_reacting:
-		hit_reaction_timer -= delta
-		if hit_reaction_timer <= 0:
-			is_hit_reacting = false
+		velocity.x = move_toward(velocity.x, 0, knockback_friction * speed * delta * 10)
 		
 	var mouth_open := Input.is_action_pressed(input_fire)
 	
@@ -206,7 +231,8 @@ func _physics_process(delta: float) -> void:
 	elif direction != 0:
 		velocity.x = direction * current_speed
 	else:
-		velocity.x = move_toward(velocity.x, 0, current_speed)
+		var brake: float = crouch_speed if is_crouching else speed
+		velocity.x = move_toward(velocity.x, 0, brake)
 
 	move_and_slide()
 	_handle_player_push(direction, current_speed, delta)   # player getroffen
@@ -280,6 +306,7 @@ func _update_injury_stage(hit_direction: float = 0.0) -> void:
 		if new_stage >= tail_piece_stage and previous_stage < tail_piece_stage:
 			var tail_position: Vector2 = _drop_tail_piece()
 			_spawn_blood_pool(tail_position, hit_direction)
+			pending_knockback_multiplier = tail_drop_knockback_multiplier
 
 
 func _apply_injury_frames() -> void:
@@ -312,12 +339,15 @@ func _drop_tail_piece() -> Vector2:
 	return drop_position
 
 func _die_from_hits(hit_direction: float = 0.0) -> void:
+	death_anim_finished = true   # ohne eigene Todesanimation sofort freigeben
 	if death_sprite_frames != null:
 		animated_sprite.sprite_frames = death_sprite_frames
 		if death_sprite_frames.has_animation(\"death\"):
 			animated_sprite.rotation = 0.0
 			animated_sprite.play(\"death\")
-	_spawn_death_pool(hit_direction)
+			death_anim_finished = false
+	death_pool_pending = true
+	death_pool_direction = hit_direction
 	_die()
 
 
@@ -335,27 +365,30 @@ func _get_injury_jump_multiplier() -> float:
 func _die() -> void:
 	is_dead = true
 	velocity = Vector2.ZERO
-	set_physics_process(false)
 	died.emit(self)
 
 func _handle_player_push(direction: float, current_speed: float, delta: float) -> void:
 	if direction == 0.0 or is_dead:
-		return  # nur pushen, wenn aktiv in eine Richtung gelaufen wird
+		return
 
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
-		var collider := collision.get_collider()
+		var other := collision.get_collider() as CharacterBody2D
+		if other == null or other == self or not other.is_in_group(\"players\"):
+			continue
 
-		if collider is CharacterBody2D and collider.is_in_group(\"players\") and collider != self:
-			if \"is_dead\" in collider and collider.is_dead:
-				continue  # tote Spieler nicht mehr schieben
+		var push_direction: float = sign(other.global_position.x - global_position.x)
+		if push_direction == 0:
+			push_direction = sign(direction)
 
-			var push_direction = sign(collider.global_position.x - global_position.x)
-			if push_direction == 0:
-				push_direction = sign(direction)
-
-			var push_amount := current_speed * push_strength * delta
-			collider.global_position.x += push_direction * push_amount
+		if other.get(\"is_dead\"):
+			# Wer von oben über den Toten kriecht, schiebt ihn nicht weg
+			if collision.get_normal().y < -0.7:
+				continue
+			other.velocity.x = push_direction * current_speed * push_strength
+		else:
+			var push_amount: float = current_speed * push_strength * delta
+			other.global_position.x += push_direction * push_amount
 
 func _align_sprite_to_floor(delta: float) -> void:
 	var target_rotation := 0.0
@@ -404,6 +437,10 @@ func _check_landing(direction: float) -> void:
 		was_falling_sideways = false
 
 func _on_animation_finished() -> void:
+	if is_dead:
+		if animated_sprite.animation == &\"death\":
+			death_anim_finished = true
+		return
 	if is_landing:
 		is_landing = false
 		landing_variant = \"\"
@@ -464,8 +501,6 @@ func _check_bite_hit() -> void:
 	for player in get_tree().get_nodes_in_group(\"players\"):
 		if player == self:
 			continue
-		if \"is_dead\" in player and player.is_dead:
-			continue
 
 		var horizontal_distance: float = abs(player.global_position.x - global_position.x)
 		var vertical_distance: float = abs(player.global_position.y - global_position.y)
@@ -479,7 +514,9 @@ func _check_bite_hit() -> void:
 
 
 func receive_hit(from_position: Vector2 = global_position) -> void:
-	if is_dead or is_hit_reacting:
+	if is_dead:
+		_receive_hit_as_corpse(from_position)
+	if is_hit_reacting:
 		return
 
 	var knockback_direction: float = sign(global_position.x - from_position.x)
@@ -495,11 +532,20 @@ func receive_hit(from_position: Vector2 = global_position) -> void:
 	is_hit_reacting = true
 	is_biting = false
 	is_block_starting = false
-
+	
+	pending_knockback_multiplier = 1.0
 	hits_taken += 1
 	_update_injury_stage(knockback_direction)
-
-	velocity.x = knockback_direction * knockback_strength
+	
+	if is_dead:
+		# Todesbiss: nur ein kleiner Stoß, damit der Tote nicht weit wegrutscht
+		velocity.x = knockback_direction * knockback_strength * death_knockback_multiplier
+		pending_knockback_multiplier = 1.0
+		_spawn_blood_splatter(knockback_direction)
+		return
+		
+	velocity.x = knockback_direction * knockback_strength * pending_knockback_multiplier
+	pending_knockback_multiplier = 1.0
 	_spawn_blood_splatter(knockback_direction)
 
 func _spawn_blood_pool(world_position: Vector2, direction: float) -> void:
@@ -526,6 +572,67 @@ func _spawn_blood_splatter(direction: float) -> void:
 	splatter.global_position = global_position
 	splatter.flip_h = direction < 0
 #	print(\"Splatter LOKALE position: \", splatter.position, \" | OFFSET: \", splatter.offset)
+
+func _dead_physics(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y += gravity * delta
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, dead_friction * delta)
+
+	move_and_slide()
+
+	if absf(corpse_spin) > 0.01:
+		animated_sprite.rotation += corpse_spin * delta
+		corpse_spin = move_toward(corpse_spin, 0.0, deg_to_rad(corpse_spin_decay_degrees) * delta)
+	else:
+		corpse_spin = 0.0
+		_align_sprite_to_floor(delta)
+
+	_update_death_push_animation()
+
+	if death_pool_pending:
+		if is_on_floor() and absf(velocity.x) <= death_pool_settle_speed:
+			death_pool_pending = false
+			_spawn_death_pool(death_pool_direction)
+		elif global_position.y > death_y:
+			death_pool_pending = false
+
+	if global_position.y > death_y + 600.0:
+		set_physics_process(false)
+
+func _receive_hit_as_corpse(from_position: Vector2) -> void:
+	var direction: float = sign(global_position.x - from_position.x)
+	if direction == 0:
+		direction = -1.0 if animated_sprite.flip_h else 1.0
+
+	velocity.x = direction * corpse_knockback_strength
+	corpse_spin = direction * deg_to_rad(corpse_spin_degrees_per_second)
+
+func _update_death_push_animation() -> void:
+	if not death_anim_finished or death_sprite_frames == null:
+		return
+
+	var frames: SpriteFrames = animated_sprite.sprite_frames
+	var is_sliding: bool = is_on_floor() and absf(velocity.x) > death_push_min_speed
+
+	if is_sliding:
+		is_death_pushed = true
+		if frames.has_animation(death_push_animation):
+			var needs_start: bool = animated_sprite.animation != death_push_animation or not animated_sprite.is_playing()
+			if needs_start:
+				animated_sprite.play(death_push_animation)
+				animated_sprite.frame = 0   # jedes neue Schieben beginnt wieder am Anfang
+	elif is_death_pushed:
+		is_death_pushed = false
+		# Letzter Frame der Schiebe-Animation bleibt stehen
+		if frames.has_animation(death_push_animation):
+			animated_sprite.animation = death_push_animation
+			animated_sprite.frame = frames.get_frame_count(death_push_animation) - 1
+			animated_sprite.stop()
+		elif frames.has_animation(&\"death\"):
+			animated_sprite.animation = &\"death\"
+			animated_sprite.frame = frames.get_frame_count(&\"death\") - 1
+			animated_sprite.stop()
 
 func update_animation(direction: float, mouth_open: bool) -> void:
 	_update_facing(direction, mouth_open)

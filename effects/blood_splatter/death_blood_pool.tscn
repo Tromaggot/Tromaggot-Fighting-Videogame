@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://vehm2tfj3077"]
+
+[ext_resource type="SpriteFrames" uid="uid://bxe42j1upgtwg" path="res://effects/blood_splatter/death_blood_on_floor.pxo" id="1_fy2oo"]
+[ext_resource type="Script" uid="uid://c0egggskvjhvn" path="res://effects/blood_splatter/blood_pool.gd" id="2_fmwh4"]
+
+[node name="BloodPool" type="AnimatedSprite2D" unique_id=344771824]
+sprite_frames = ExtResource("1_fy2oo")
+animation = &"death_blood_on_floor"
+script = ExtResource("2_fmwh4")

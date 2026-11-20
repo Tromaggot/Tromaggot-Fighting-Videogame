@@ -12,8 +12,10 @@
 [ext_resource type="SpriteFrames" uid="uid://yso03qdmlr2h" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_02.pxo" id="7_84yk3"]
 [ext_resource type="SpriteFrames" uid="uid://83naa8bjsqi7" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_03.pxo" id="8_84yk3"]
 [ext_resource type="SpriteFrames" uid="uid://b2wu028246cvk" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_04.pxo" id="9_84uib"]
+[ext_resource type="SpriteFrames" uid="uid://binysog4xbn2u" path="res://characters/player/player_sprites/tromaggotLittleWhite_injured_05.pxo" id="10_4hpcr"]
 [ext_resource type="Texture2D" uid="uid://bqb6kci7q51iv" path="res://characters/player/player_sprites/tail_piece.pxo" id="11_pumro"]
 [ext_resource type="PackedScene" uid="uid://q7l3qu7guax6" path="res://effects/blood_splatter/blood_pool.tscn" id="11_ug12j"]
+[ext_resource type="PackedScene" uid="uid://vehm2tfj3077" path="res://effects/blood_splatter/death_blood_pool.tscn" id="13_g3ayg"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qwwbc"]
 size = Vector2(267, 15)
@@ -312,11 +314,12 @@ hit_max_vertical_distance = 15.0
 knockback_strength = 250.0
 knockback_friction = 4.0
 death_y = 300.0
-injury_stage_frames = Array[SpriteFrames]([ExtResource("5_ug12j"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib"), ExtResource("9_84uib")])
+injury_stage_frames = Array[SpriteFrames]([ExtResource("5_ug12j"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib"), ExtResource("10_4hpcr")])
 death_sprite_frames = ExtResource("6_qwwbc")
 blood_pool_scene = ExtResource("11_ug12j")
-blood_pool_offset = Vector2(0, 7)
-death_pool_scene = ExtResource("11_ug12j")
+blood_pool_offset = Vector2(0, 6)
+death_pool_scene = ExtResource("13_g3ayg")
+death_pool_offset = Vector2(0, 17)
 tail_piece_texture = ExtResource("11_pumro")
 tail_piece_rotation_degrees = 15.0
 
@@ -379,11 +382,12 @@ input_up = "p2_up"
 input_down = "p2_down"
 input_fire = "p2_fire"
 death_y = 300.0
-injury_stage_frames = Array[SpriteFrames]([ExtResource("5_ug12j"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib"), ExtResource("9_84uib")])
+injury_stage_frames = Array[SpriteFrames]([ExtResource("5_ug12j"), ExtResource("6_v2jwp"), ExtResource("7_84yk3"), ExtResource("8_84yk3"), ExtResource("9_84uib"), ExtResource("10_4hpcr")])
 death_sprite_frames = ExtResource("6_qwwbc")
 blood_pool_scene = ExtResource("11_ug12j")
-blood_pool_offset = Vector2(0, 7)
-death_pool_scene = ExtResource("11_ug12j")
+blood_pool_offset = Vector2(0, 6)
+death_pool_scene = ExtResource("13_g3ayg")
+death_pool_offset = Vector2(0, 17)
 tail_piece_texture = ExtResource("11_pumro")
 tail_piece_rotation_degrees = 15.0
 
